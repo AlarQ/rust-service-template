@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
 use super::models::{Task, TaskId};
-use crate::common::UserId;
-use crate::domain::errors::DomainError;
-use crate::domain::interfaces::task_repository::TaskRepository;
+use crate::{
+    common::UserId,
+    domain::{errors::DomainError, interfaces::task_repository::TaskRepository},
+};
 
 pub async fn get_task(id: TaskId, repo: Arc<dyn TaskRepository>) -> Result<Task, DomainError> {
     let result = repo.get(id).await?;

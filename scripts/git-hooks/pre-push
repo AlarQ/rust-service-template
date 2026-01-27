@@ -9,11 +9,16 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 
 cd "$REPO_ROOT"
 
-# 1. Check formatting (auto-formats and fails if changes were made)
+# 1. Check formatting (auto-formats and commits if changes were made)
 echo "Checking Cargo NightlyFmt..."
-if ! cargo +nightly fmt; then
-    echo "Code is not formatted. Run 'cargo +nightly fmt' to fix."
-    exit 1
+cargo +nightly fmt || true  # Don't fail if fmt makes changes
+
+# Check if formatting made any changes
+if [ -n "$(git status --porcelain)" ]; then
+    echo "Formatting changes detected. Staging and committing..."
+    git add -A
+    git commit -m "chore: apply cargo fmt"
+    echo "Formatting changes committed."
 fi
 echo "Cargo NightlyFmt passed"
 

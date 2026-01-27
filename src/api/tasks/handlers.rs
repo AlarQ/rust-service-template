@@ -5,12 +5,18 @@ use axum::{
 };
 use std::sync::Arc;
 
-use crate::api::error::{ApiErrorResponse, ErrorCode};
-use crate::api::models::tasks::{CreateTaskRequest, ListTasksQuery, TaskResponse};
-use crate::common::UserId;
-use crate::config::AppState;
-use crate::domain::task::models::Task;
-use crate::domain::task::operations::{create_task, get_task, list_tasks_by_user};
+use crate::{
+    api::{
+        error::{ApiErrorResponse, ErrorCode},
+        models::tasks::{CreateTaskRequest, ListTasksQuery, TaskResponse},
+    },
+    common::UserId,
+    config::AppState,
+    domain::task::{
+        models::Task,
+        operations::{create_task, get_task, list_tasks_by_user},
+    },
+};
 
 #[utoipa::path(
     get,

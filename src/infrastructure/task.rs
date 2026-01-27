@@ -3,9 +3,13 @@ use sqlx::PgPool;
 use std::fmt::Debug;
 use uuid::Uuid;
 
-use crate::common::UserId;
-use crate::domain::interfaces::task_repository::TaskRepository;
-use crate::domain::task::models::{Task, TaskId, TaskPriority, TaskStatus};
+use crate::{
+    common::UserId,
+    domain::{
+        interfaces::task_repository::TaskRepository,
+        task::models::{Task, TaskId, TaskPriority, TaskStatus},
+    },
+};
 
 #[derive(Clone)]
 pub struct PostgresTaskRepository {

@@ -12,10 +12,10 @@ use utoipa_swagger_ui::SwaggerUi;
 use crate::{
     api::{
         error::{ApiErrorResponse, ErrorCode},
-        tasks::handlers::__path_create_task_handler,
-        tasks::handlers::__path_get_task_handler,
-        tasks::handlers::__path_list_tasks_handler,
-        tasks::handlers::{create_task_handler, get_task_handler, list_tasks_handler},
+        tasks::handlers::{
+            __path_create_task_handler, __path_get_task_handler, __path_list_tasks_handler,
+            create_task_handler, get_task_handler, list_tasks_handler,
+        },
     },
     config::AppState,
 };

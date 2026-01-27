@@ -1,8 +1,10 @@
 use async_trait::async_trait;
 use std::fmt::Debug;
 
-use crate::common::UserId;
-use crate::domain::task::models::{Task, TaskId};
+use crate::{
+    common::UserId,
+    domain::task::models::{Task, TaskId},
+};
 
 #[async_trait]
 pub trait TaskRepository: Send + Sync + Debug {
