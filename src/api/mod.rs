@@ -46,7 +46,7 @@ pub async fn build_app_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health_check))
         .route("/tasks", get(list_tasks_handler).post(create_task_handler))
-        .route("/tasks/:id", get(get_task_handler))
+        .route("/tasks/{id}", get(get_task_handler))
         .with_state(state)
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .route("/api-docs/openapi.json", get(openapi_json_handler))
