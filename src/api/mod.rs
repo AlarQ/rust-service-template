@@ -1,5 +1,6 @@
 pub mod error;
 pub mod models;
+pub mod tasks;
 
 use std::sync::Arc;
 
@@ -9,7 +10,13 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
-    api::error::{ApiErrorResponse, ErrorCode},
+    api::{
+        error::{ApiErrorResponse, ErrorCode},
+        tasks::handlers::__path_create_task_handler,
+        tasks::handlers::__path_get_task_handler,
+        tasks::handlers::__path_list_tasks_handler,
+        tasks::handlers::{create_task_handler, get_task_handler, list_tasks_handler},
+    },
     config::AppState,
 };
 
@@ -17,13 +24,19 @@ use crate::{
 #[openapi(
     paths(
         health_check,
+        get_task_handler,
+        list_tasks_handler,
+        create_task_handler,
     ),
     components(schemas(
         ApiErrorResponse,
         ErrorCode,
+        crate::api::models::tasks::TaskResponse,
+        crate::api::models::tasks::CreateTaskRequest,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),
+        (name = "tasks", description = "Task management endpoints"),
     )
 )]
 pub struct ApiDoc;
@@ -32,6 +45,8 @@ pub struct ApiDoc;
 pub async fn build_app_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health_check))
+        .route("/tasks", get(list_tasks_handler).post(create_task_handler))
+        .route("/tasks/:id", get(get_task_handler))
         .with_state(state)
         .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .route("/api-docs/openapi.json", get(openapi_json_handler))

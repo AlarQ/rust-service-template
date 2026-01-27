@@ -1,12 +1,16 @@
 use config::{Config, ConfigError, Environment};
 use serde::Deserialize;
 use sqlx::PgPool;
+use std::sync::Arc;
+
+use crate::domain::interfaces::task_repository::TaskRepository;
 
 /// Application state shared across handlers
 #[derive(Clone)]
 pub struct AppState {
     pub db_pool: PgPool,
     pub env: AppConfig,
+    pub task_repository: Arc<dyn TaskRepository>,
 }
 
 /// Application configuration loaded from environment variables

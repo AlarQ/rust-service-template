@@ -2,3 +2,5 @@
 // Example:
 // pub mod postgres_user_repository;
 // pub mod kafka_producer;
+
+pub mod task;

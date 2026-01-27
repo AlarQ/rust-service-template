@@ -2,3 +2,5 @@
 // Example:
 // pub mod user_repository;
 // pub mod event_producer;
+
+pub mod task_repository;

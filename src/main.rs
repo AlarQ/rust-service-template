@@ -11,6 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use rust_service_template::{
     api::server_start,
     config::{AppConfig, AppState},
+    infrastructure::task::PostgresTaskRepository,
 };
 
 #[tokio::main]
@@ -62,8 +63,9 @@ async fn main() -> Result<()> {
     tracing::info!("Migrations finished");
 
     let app_state = Arc::new(AppState {
-        db_pool,
+        db_pool: db_pool.clone(),
         env: config.clone(),
+        task_repository: Arc::new(PostgresTaskRepository::new(db_pool)),
     });
 
     server_start(app_state, config).await
