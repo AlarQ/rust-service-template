@@ -4,7 +4,7 @@
 
 ---
 
-## `domain/{feature}/services.rs`
+## `domain/{feature}/operations.rs`
 
 ```rust
 use std::sync::Arc;

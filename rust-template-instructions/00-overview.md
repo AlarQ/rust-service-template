@@ -43,6 +43,7 @@ A comprehensive template for creating production-ready Rust microservices follow
 24. [Run Script](24-run-script.md) - run.sh template
 25. [CLAUDE.md](25-claude-md.md) - CLAUDE.md template
 26. [Quick Start Checklist](26-quick-start-checklist.md) - Checklist and placeholder reference
+27. [Git Workflows](27-git-workflows.md) - GitHub Actions CI/CD and releases
 
 ---
 

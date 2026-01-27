@@ -1,6 +1,6 @@
 # Quick Start Checklist
 
-[← CLAUDE.md](25-claude-md.md) | [Back to Overview →](00-overview.md)
+[← CLAUDE.md](25-claude-md.md) | [Next: Git Workflows →](27-git-workflows.md) | [Back to Overview →](00-overview.md)
 
 ---
 
@@ -52,12 +52,17 @@
 
 ---
 
-## Testing & DevOps (Files 22-25)
+## Testing & DevOps (Files 22-27)
 
 - [ ] Write test utilities in `tests/common.rs` ([22-testing.md](22-testing.md))
 - [ ] Set up `docker-compose.yaml` ([23-docker-compose.md](23-docker-compose.md))
 - [ ] Create `run.sh` with environment variables ([24-run-script.md](24-run-script.md))
 - [ ] Run `./scripts/install-hooks.sh` to install git hooks ([01-prerequisites.md](01-prerequisites.md))
+- [ ] Set up GitHub Actions workflows ([27-git-workflows.md](27-git-workflows.md))
+  - [ ] Copy `.github/workflows/` files (commits.yml, ci.yml, release.yml)
+  - [ ] Copy `.github/actions/` files (setup-rust.yml, setup-sqlx.yml, etc.)
+  - [ ] Configure `.cliff.toml` for changelog generation
+  - [ ] Update workflow names and repository references
 - [ ] Create `CLAUDE.md` for AI assistance ([25-claude-md.md](25-claude-md.md))
 
 ---
@@ -107,4 +112,4 @@ Replace these placeholders when using the template:
 
 ---
 
-[← CLAUDE.md](25-claude-md.md) | [Back to Overview →](00-overview.md)
+[← CLAUDE.md](25-claude-md.md) | [Next: Git Workflows →](27-git-workflows.md) | [Back to Overview →](00-overview.md)

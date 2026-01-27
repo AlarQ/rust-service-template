@@ -16,7 +16,7 @@ src/
 │   │   └── event_producer.rs
 │   └── {feature}/
 │       ├── mod.rs
-│       ├── services.rs        # FREE FUNCTIONS (no service structs!)
+│       ├── operations.rs      # FREE FUNCTIONS (no service structs!)
 │       └── models/
 │           ├── mod.rs
 │           ├── {entity}.rs    # Entities & value objects

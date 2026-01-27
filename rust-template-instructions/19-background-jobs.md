@@ -3,7 +3,7 @@
 [← DTO Conversion](18-dto-conversion.md) | [Next: Event Schema →](20-event-schema.md)
 
 ---
-
+ONLY WHEN REPOSITORY FUNCTIONALITY NEEDS THAT
 ## Job Entity
 
 ```rust

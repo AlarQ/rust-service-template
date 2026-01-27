@@ -1,4 +1,4 @@
-# CLAUDE.md Template
+# AGENTS.md Template
 
 [← Run Script](24-run-script.md) | [Next: Quick Start Checklist →](26-quick-start-checklist.md)
 
@@ -7,7 +7,7 @@
 ## Template
 
 ````markdown
-# CLAUDE.md
+# AGENTS.md
 
 ## Service Overview
 
@@ -90,7 +90,7 @@ cargo test --test integration_tests
 
 ## Purpose
 
-The CLAUDE.md file provides AI assistants with:
+The AGENTS.md file provides AI assistants with:
 - Quick reference for common commands
 - Architecture overview
 - Key endpoints and domain concepts
