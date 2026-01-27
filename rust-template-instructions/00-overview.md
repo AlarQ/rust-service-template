@@ -8,7 +8,7 @@ A comprehensive template for creating production-ready Rust microservices follow
 
 ### Phase 1: Prerequisites and Project Setup
 1. [Prerequisites & Git Hooks](01-prerequisites.md) - Required tools, git hooks configuration
-2. [Code Quality Config](02-code-quality-config.md) - Clippy and Rustfmt configuration
+2. [Code Quality Config](02-code-quality-config.md) - Clippy and Cargo NightlyFmt configuration
 3. [Project Structure](03-project-structure.md) - DDD directory structure
 4. [Architecture Rules](04-architecture-rules.md) - Critical architecture rules
 5. [Dependencies](05-dependencies.md) - Cargo.toml template

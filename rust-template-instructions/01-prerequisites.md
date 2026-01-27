@@ -9,7 +9,7 @@
 Install these tools before setting up the project:
 
 ```bash
-# Required: Nightly toolchain for rustfmt
+# Required: Nightly toolchain for Cargo NightlyFmt
 rustup toolchain install nightly
 
 # Required: Security audit
@@ -42,7 +42,7 @@ The pre-push hook runs local quality checks before pushing to remote.
 **Location:** `.git/hooks/pre-push`
 
 **Checks Performed:**
-1. **Formatting** - `cargo +nightly fmt` (auto-formats and fails if changes made)
+1. **Formatting** - Cargo NightlyFmt (auto-formats and fails if changes made)
 2. **Clippy** - `cargo clippy --all-targets --all-features -- -D warnings`
 3. **Tests** - `cargo test --all-features`
 4. **Security Audit** - `cargo audit` (if installed, fails on vulnerabilities)
@@ -63,12 +63,12 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
 # 1. Check formatting (auto-formats and fails if changes were made)
-echo "📝 Checking rustfmt..."
+echo "📝 Checking Cargo NightlyFmt..."
 if ! cargo +nightly fmt; then
-    echo "❌ Code is not formatted. Run 'cargo fmt' to fix."
+    echo "❌ Code is not formatted. Run 'cargo +nightly fmt' to fix."
     exit 1
 fi
-echo "✅ rustfmt passed"
+echo "✅ Cargo NightlyFmt passed"
 
 # 2. Run clippy
 echo "🔍 Running clippy..."
@@ -179,7 +179,7 @@ echo ""
 echo "Git hooks installed successfully!"
 echo ""
 echo "The pre-push hook will run:"
-echo "  - cargo +nightly fmt (auto-format and check)"
+echo "  - Cargo NightlyFmt (auto-format and check)"
 echo "  - cargo clippy"
 echo "  - cargo test"
 echo "  - cargo audit (if installed)"
@@ -251,7 +251,7 @@ echo ""
 echo "Git hooks installed successfully!"
 echo ""
 echo "The pre-push hook will run:"
-echo "  - cargo +nightly fmt"
+echo "  - Cargo NightlyFmt"
 echo "  - cargo clippy"
 echo "  - cargo test"
 echo "  - cargo audit"

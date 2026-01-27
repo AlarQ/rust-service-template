@@ -10,12 +10,12 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
 # 1. Check formatting (auto-formats and fails if changes were made)
-echo "Checking rustfmt..."
+echo "Checking Cargo NightlyFmt..."
 if ! cargo +nightly fmt; then
-    echo "Code is not formatted. Run 'cargo fmt' to fix."
+    echo "Code is not formatted. Run 'cargo +nightly fmt' to fix."
     exit 1
 fi
-echo "rustfmt passed"
+echo "Cargo NightlyFmt passed"
 
 # 2. Run clippy
 echo "Running clippy..."

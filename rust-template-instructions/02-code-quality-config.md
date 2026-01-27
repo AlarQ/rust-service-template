@@ -17,9 +17,9 @@ Add to the top of `src/main.rs`:
 
 ---
 
-## Rustfmt Configuration
+## Cargo NightlyFmt Configuration
 
-Create `rustfmt.toml` in project root:
+Create `rustfmt.toml` in project root (used by Cargo NightlyFmt):
 
 ```toml
 imports_granularity = "Crate"

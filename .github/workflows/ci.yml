@@ -73,7 +73,7 @@ jobs:
         with:
           components: clippy
 
-      - name: Install nightly toolchain for rustfmt
+      - name: Install nightly toolchain for Cargo NightlyFmt
         run: rustup toolchain install nightly --component rustfmt
 
       - name: Check formatting

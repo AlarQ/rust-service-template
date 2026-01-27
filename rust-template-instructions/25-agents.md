@@ -29,7 +29,7 @@ cargo test
 cargo test --test integration_tests
 
 # Code quality
-cargo fmt
+cargo +nightly fmt  # Cargo NightlyFmt
 cargo clippy --all-targets --all-features -- -D warnings
 ```
 

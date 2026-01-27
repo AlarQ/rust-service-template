@@ -3,19 +3,15 @@ pub mod models;
 
 use std::sync::Arc;
 
-use axum::{
-    http::StatusCode,
-    middleware,
-    response::IntoResponse,
-    routing::get,
-    Router,
-};
+use axum::{http::StatusCode, middleware, response::IntoResponse, routing::get, Router};
 use tower_http::trace::TraceLayer;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::api::error::{ApiErrorResponse, ErrorCode};
-use crate::config::AppState;
+use crate::{
+    api::error::{ApiErrorResponse, ErrorCode},
+    config::AppState,
+};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -37,10 +33,7 @@ pub async fn build_app_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health_check))
         .with_state(state)
-        .merge(
-            SwaggerUi::new("/swagger-ui")
-                .url("/api-doc/openapi.json", ApiDoc::openapi()),
-        )
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .route("/api-docs/openapi.json", get(openapi_json_handler))
         .layer(TraceLayer::new_for_http())
         .layer(middleware::from_fn(trace_404_middleware))

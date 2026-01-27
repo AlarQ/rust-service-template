@@ -158,14 +158,14 @@ JWT_SECRET: test-secret
 **Steps:**
 1. Checkout repository
 2. Setup Rust with clippy component
-3. Install nightly toolchain with rustfmt
+3. Install nightly toolchain with Cargo NightlyFmt
 4. Cache cargo registry
 5. Check formatting: `cargo +nightly fmt -- --check`
 6. Run clippy: `cargo clippy --all-features --offline -- -D warnings`
 
 **Rules:**
 - Any clippy warning fails the build (`-D warnings`)
-- Formatting must match nightly rustfmt
+- Formatting must match Cargo NightlyFmt
 
 #### Build (`build`)
 
@@ -518,7 +518,7 @@ Updates `CHANGELOG.md` with new version section.
 **Purpose:** Runs local checks before pushing to remote.
 
 **Checks:**
-1. **Formatting**: `cargo +nightly fmt` (auto-formats and fails if changes made)
+1. **Formatting**: Cargo NightlyFmt (auto-formats and fails if changes made)
 2. **Clippy**: `cargo clippy --all-targets --all-features -- -D warnings`
 3. **Tests**: `cargo test --all-features`
 4. **Security**: `cargo audit` (if installed)
@@ -540,8 +540,8 @@ git push --no-verify
 ```bash
 🔧 Running pre-push checks...
 
-📝 Checking rustfmt...
-✅ rustfmt passed
+📝 Checking Cargo NightlyFmt...
+✅ Cargo NightlyFmt passed
 
 🔍 Running clippy...
 ✅ clippy passed
