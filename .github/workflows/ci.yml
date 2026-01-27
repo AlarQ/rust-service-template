@@ -9,6 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
+  RUST_SERVICE_TEMPLATE__DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
   KAFKA_BOOTSTRAP_SERVERS: localhost:9092
   JWT_SECRET: test-secret-for-ci
 

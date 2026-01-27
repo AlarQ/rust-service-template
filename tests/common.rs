@@ -42,10 +42,20 @@ pub async fn app() -> (Router, Arc<sqlx::PgPool>) {
         // Set server configuration for tests
         std::env::set_var("RUST_SERVICE_TEMPLATE__SERVER_HOST", "127.0.0.1");
         std::env::set_var("RUST_SERVICE_TEMPLATE__SERVER_PORT", "8080");
-        std::env::set_var(
-            "RUST_SERVICE_TEMPLATE__DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5445/rust_service_template",
-        );
+        
+        // Use DATABASE_URL from environment (for CI) or fall back to local dev default
+        if std::env::var("RUST_SERVICE_TEMPLATE__DATABASE_URL").is_err() {
+            if let Ok(database_url) = std::env::var("DATABASE_URL") {
+                // Convert DATABASE_URL to RUST_SERVICE_TEMPLATE__DATABASE_URL format
+                std::env::set_var("RUST_SERVICE_TEMPLATE__DATABASE_URL", database_url);
+            } else {
+                // Local development default
+                std::env::set_var(
+                    "RUST_SERVICE_TEMPLATE__DATABASE_URL",
+                    "postgresql://postgres:postgres@localhost:5445/rust_service_template",
+                );
+            }
+        }
 
         std::env::set_var(
             "RUST_LOG",
@@ -65,11 +75,41 @@ pub async fn app() -> (Router, Arc<sqlx::PgPool>) {
 
     let config: AppConfig = AppConfig::init().expect("Failed to initialize config");
 
-    let db_pool = PgPoolOptions::new()
-        .max_connections(20)
-        .connect(&config.database_url)
-        .await
-        .expect("Failed to connect to database");
+    // Use longer timeout for CI environments where database might take time to be ready
+    // Retry connection with exponential backoff for CI environments
+    let mut db_pool = None;
+    let mut retries = 5;
+    let mut delay = std::time::Duration::from_secs(2);
+    
+    while db_pool.is_none() && retries > 0 {
+        match PgPoolOptions::new()
+            .max_connections(20)
+            .acquire_timeout(std::time::Duration::from_secs(30))
+            .connect(&config.database_url)
+            .await
+        {
+            Ok(pool) => {
+                db_pool = Some(pool);
+                break;
+            }
+            Err(e) => {
+                retries -= 1;
+                if retries > 0 {
+                    tracing::warn!(
+                        "Failed to connect to database ({} retries left): {}",
+                        retries,
+                        e
+                    );
+                    tokio::time::sleep(delay).await;
+                    delay *= 2; // Exponential backoff
+                } else {
+                    panic!("Failed to connect to database after retries: {}", e);
+                }
+            }
+        }
+    }
+    
+    let db_pool = db_pool.expect("Failed to connect to database");
 
     // Run migrations
     sqlx::migrate!("./migrations")
