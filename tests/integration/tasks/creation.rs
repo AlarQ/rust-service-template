@@ -357,5 +357,8 @@ async fn test_task_persists_to_database() {
     let task_id: Uuid = body["id"].as_str().unwrap().parse().unwrap();
 
     // Verify task exists in database
-    assert!(task_exists_in_db(&pool, &task_id).await, "Task should be persisted in database");
+    assert!(
+        task_exists_in_db(&pool, &task_id).await,
+        "Task should be persisted in database"
+    );
 }
