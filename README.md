@@ -41,23 +41,23 @@ This checklist tracks which parts of the template instructions have been impleme
 - [ ] **12-jwt-authentication.md** - JWT claims struct (`JwtClaims`)
 - [ ] **12-jwt-authentication.md** - JWT validation function (`extract_jwt_claims`)
 - [ ] **12-jwt-authentication.md** - `api/auth.rs` module
-- [ ] **13-api-handlers.md** - Feature-specific handler modules (`api/{feature}/handlers.rs`)
-- [ ] **13-api-handlers.md** - Handler functions with `#[utoipa::path]` annotations
-- [ ] **13-api-handlers.md** - Handler route definitions
+- [x] **13-api-handlers.md** - Feature-specific handler modules (`api/{feature}/handlers.rs`)
+- [x] **13-api-handlers.md** - Handler functions with `#[utoipa::path]` annotations
+- [x] **13-api-handlers.md** - Handler route definitions
 - [ ] **14-file-uploads.md** - Multipart file upload handling (if needed)
 
 ## Phase 4: Domain Layer
 
 - [x] **15-repository-pattern.md** - Domain interfaces directory (`domain/interfaces/`)
-- [ ] **15-repository-pattern.md** - Repository trait definitions (`domain/interfaces/{feature}_repository.rs`)
-- [ ] **15-repository-pattern.md** - Repository implementations (`infrastructure/{feature}.rs`)
-- [ ] **15-repository-pattern.md** - Repository health check method
-- [ ] **16-domain-services.md** - Domain service functions (`domain/{feature}/operations.rs`)
-- [ ] **16-domain-services.md** - Free function pattern (no service structs)
-- [ ] **17-value-objects.md** - Value object definitions with validation
-- [ ] **17-value-objects.md** - Entity ID newtype wrappers
-- [ ] **18-dto-conversion.md** - Request DTOs with `TryFrom` implementations
-- [ ] **18-dto-conversion.md** - Response DTOs with `From` implementations
+- [x] **15-repository-pattern.md** - Repository trait definitions (`domain/interfaces/{feature}_repository.rs`)
+- [x] **15-repository-pattern.md** - Repository implementations (`infrastructure/{feature}.rs`)
+- [x] **15-repository-pattern.md** - Repository health check method
+- [x] **16-domain-services.md** - Domain service functions (`domain/{feature}/operations.rs`)
+- [x] **16-domain-services.md** - Free function pattern (no service structs)
+- [x] **17-value-objects.md** - Value object definitions with validation
+- [x] **17-value-objects.md** - Entity ID newtype wrappers
+- [x] **18-dto-conversion.md** - Request DTOs with `TryFrom` implementations
+- [x] **18-dto-conversion.md** - Response DTOs with `From` implementations
 - [ ] **19-background-jobs.md** - Background job pattern (if needed)
 
 ## Phase 5: Infrastructure
@@ -69,10 +69,10 @@ This checklist tracks which parts of the template instructions have been impleme
 
 ## Phase 6: Testing and DevOps
 
-- [ ] **22-testing.md** - Test utilities in `tests/common.rs`
+- [x] **22-testing.md** - Test utilities in `tests/common.rs`
 - [ ] **22-testing.md** - Mock event service for tests
 - [ ] **22-testing.md** - Test configuration helpers
-- [ ] **22-testing.md** - Integration test examples
+- [x] **22-testing.md** - Integration test examples
 - [x] **23-docker-compose.md** - `docker-compose.yaml` file
 - [x] **24-run-script.md** - `run.sh` script with environment variables
 - [x] **27-git-workflows.md** - GitHub Actions workflows exist (`.github/workflows/`)
@@ -86,8 +86,8 @@ This checklist tracks which parts of the template instructions have been impleme
 
 ## Summary
 
-**Implemented:** 26 items  
-**Not Implemented:** 34+ items
+**Implemented:** 41 items
+**Not Implemented:** 15 items
 
 ### Key Missing Components
 
@@ -95,17 +95,15 @@ This checklist tracks which parts of the template instructions have been impleme
    - Readiness endpoint (`/ready`)
    - CORS configuration
    - JWT authentication (`api/auth.rs`)
-   - Feature-specific handlers
 
-2. **Domain Layer:**
-   - Repository trait definitions and implementations
-   - Domain service functions
-   - Value objects
-   - DTO conversions
-
-3. **Infrastructure:**
-   - Kafka producer
+2. **Infrastructure:**
+   - Kafka producer (`infrastructure/kafka_producer.rs`)
    - Event schemas
 
-4. **Testing & DevOps:**
-   - Test utilities
+3. **Testing:**
+   - Mock event service for tests
+   - Test configuration helpers
+
+4. **Optional:**
+   - Background job pattern (if needed)
+   - Multipart file upload handling (if needed)
