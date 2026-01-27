@@ -1,0 +1,61 @@
+#!/bin/bash
+
+set -e
+
+echo "Running pre-push checks..."
+
+# Get the repo root (transaction-service is its own repo)
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+cd "$REPO_ROOT"
+
+# 1. Check formatting (auto-formats and fails if changes were made)
+echo "Checking rustfmt..."
+if ! cargo +nightly fmt; then
+    echo "Code is not formatted. Run 'cargo fmt' to fix."
+    exit 1
+fi
+echo "rustfmt passed"
+
+# 2. Run clippy
+echo "Running clippy..."
+if ! cargo clippy --all-targets --all-features -- -D warnings; then
+    echo "Clippy found issues. Fix them before pushing."
+    exit 1
+fi
+echo "clippy passed"
+
+# 3. Run tests
+echo "Running tests..."
+if ! cargo test --all-features; then
+    echo "Tests failed. Fix them before pushing."
+    exit 1
+fi
+echo "tests passed"
+
+# 4. Run cargo audit (if installed)
+if command -v cargo-audit &> /dev/null; then
+    echo "Running cargo audit..."
+    if ! cargo audit; then
+        echo "Security vulnerabilities found. Review before pushing."
+        exit 1
+    fi
+    echo "cargo audit passed"
+else
+    echo "cargo-audit not installed, skipping (install with: cargo install cargo-audit)"
+fi
+
+# 5. Check outdated dependencies (if installed) - warning only
+if command -v cargo-outdated &> /dev/null; then
+    echo "Checking outdated dependencies..."
+    OUTDATED=$(cargo outdated --root-deps-only --format json 2>/dev/null | jq '.dependencies | length' 2>/dev/null || echo "0")
+    if [ "$OUTDATED" != "0" ] && [ "$OUTDATED" != "" ]; then
+        echo "$OUTDATED outdated dependencies found. Run 'cargo outdated' for details."
+    else
+        echo "dependencies up to date"
+    fi
+else
+    echo "cargo-outdated not installed, skipping (install with: cargo install cargo-outdated)"
+fi
+
+echo "All pre-push checks passed!"

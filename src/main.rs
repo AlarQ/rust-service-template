@@ -29,8 +29,7 @@ async fn main() -> Result<()> {
 
     tracing::info!("Starting rust-service-template");
 
-    let config = AppConfig::init()
-        .map_err(|e| anyhow::anyhow!("Configuration error: {e}"))?;
+    let config = AppConfig::init().map_err(|e| anyhow::anyhow!("Configuration error: {e}"))?;
 
     tracing::info!("Connecting to database...");
 

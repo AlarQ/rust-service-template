@@ -1,0 +1,71 @@
+name: Conventional Commits
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    name: Validate Commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup git-cliff
+        uses: ./.github/actions/setup-git-cliff
+
+      - name: Validate commit messages
+        run: |
+          # Get commits in PR
+          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=format:"%s")
+
+          # Conventional commit regex pattern
+          PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|deps|security|release)(!)?(\(.+\))?: .+"
+
+          INVALID_COMMITS=""
+          VALID=true
+
+          while IFS= read -r commit; do
+            if [ -n "$commit" ]; then
+              if ! echo "$commit" | grep -qE "$PATTERN"; then
+                INVALID_COMMITS="$INVALID_COMMITS\n  - $commit"
+                VALID=false
+              fi
+            fi
+          done <<< "$COMMITS"
+
+          if [ "$VALID" = false ]; then
+            echo "::error::Some commits do not follow conventional commit format"
+            echo ""
+            echo "Invalid commits:$INVALID_COMMITS"
+            echo ""
+            echo "Expected format: <type>[!][(scope)]: <description>"
+            echo ""
+            echo "Valid types:"
+            echo "  feat     - New features (minor version bump)"
+            echo "  fix      - Bug fixes (patch version bump)"
+            echo "  docs     - Documentation changes"
+            echo "  style    - Code style changes (formatting, etc.)"
+            echo "  refactor - Code refactoring (patch version bump)"
+            echo "  perf     - Performance improvements (patch version bump)"
+            echo "  test     - Adding or updating tests"
+            echo "  build    - Build system changes"
+            echo "  ci       - CI/CD changes"
+            echo "  chore    - Maintenance tasks"
+            echo "  revert   - Reverting previous changes"
+            echo "  deps     - Dependency updates (patch version bump)"
+            echo "  security - Security fixes (patch version bump)"
+            echo "  release  - Release automation"
+            echo ""
+            echo "Examples:"
+            echo "  feat(api): add transaction pagination"
+            echo "  fix!: breaking change to transaction model"
+            echo "  docs: update API documentation"
+            echo "  chore(deps): update reqwest to latest version"
+            exit 1
+          fi
+
+          echo "All commits follow conventional commit format"

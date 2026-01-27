@@ -22,7 +22,10 @@ async fn health_check() -> &'static str {
 }
 
 /// Start the HTTP server
-pub async fn server_start(state: Arc<AppState>, config: crate::config::AppConfig) -> anyhow::Result<()> {
+pub async fn server_start(
+    state: Arc<AppState>,
+    config: crate::config::AppConfig,
+) -> anyhow::Result<()> {
     let app = create_router(state);
 
     let addr = format!("{}:{}", config.server_host, config.server_port);
