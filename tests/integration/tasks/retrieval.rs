@@ -40,7 +40,10 @@ async fn test_get_task_returns_404_for_non_existent_task() {
         make_request(&app, "GET", &format!("/tasks/{}", fake_id), None).await;
 
     // Assert: Verify 404 Not Found
-    assert_eq!(status, 404, "Should return 404 Not Found for non-existent task");
+    assert_eq!(
+        status, 404,
+        "Should return 404 Not Found for non-existent task"
+    );
     verify_error_response(&body_bytes, "NotFound");
 }
 
@@ -58,7 +61,10 @@ async fn test_get_task_returns_400_for_invalid_uuid_format() {
         make_request(&app, "GET", &format!("/tasks/{}", invalid_id), None).await;
 
     // Assert: Verify 400 Bad Request
-    assert_eq!(status, 400, "Should return 400 Bad Request for invalid UUID");
+    assert_eq!(
+        status, 400,
+        "Should return 400 Bad Request for invalid UUID"
+    );
     verify_error_response(&body_bytes, "BadRequest");
 }
 
@@ -81,7 +87,8 @@ async fn test_get_task_returns_200_for_task_with_empty_description() {
     assert_eq!(status, 200, "Should return 200 OK");
     let body: Value = parse_json_response(&body_bytes);
     assert_eq!(
-        body["description"], serde_json::Value::Null,
+        body["description"],
+        serde_json::Value::Null,
         "Description should be null"
     );
     assert_eq!(body["title"], title, "Title should match");
@@ -160,7 +167,10 @@ async fn test_get_task_returns_200_for_completed_task() {
         body["completed_at"].is_string(),
         "completed_at should be a string timestamp"
     );
-    assert!(body.get("completed_at").is_some(), "Should have completed_at field");
+    assert!(
+        body.get("completed_at").is_some(),
+        "Should have completed_at field"
+    );
 }
 
 #[tokio::test]

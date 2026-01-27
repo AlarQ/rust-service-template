@@ -21,12 +21,24 @@ async fn test_create_task_returns_201_with_valid_data() {
     assert_eq!(status, 201, "Should return 201 Created");
     let body: Value = parse_json_response(&body_bytes);
     assert_eq!(body["title"], title, "Title should match request");
-    assert_eq!(body["description"], "Test description", "Description should match");
+    assert_eq!(
+        body["description"], "Test description",
+        "Description should match"
+    );
     assert_eq!(body["priority"], "High", "Priority should be High");
-    assert_eq!(body["status"], "Pending", "Status should default to Pending");
+    assert_eq!(
+        body["status"], "Pending",
+        "Status should default to Pending"
+    );
     assert!(body.get("id").is_some(), "Response should include task ID");
-    assert!(body.get("user_id").is_some(), "Response should include user_id");
-    assert!(body.get("created_at").is_some(), "Response should include created_at");
+    assert!(
+        body.get("user_id").is_some(),
+        "Response should include user_id"
+    );
+    assert!(
+        body.get("created_at").is_some(),
+        "Response should include created_at"
+    );
 }
 
 #[tokio::test]
@@ -107,7 +119,10 @@ async fn test_create_task_returns_201_with_unicode_characters() {
     // Assert: Verify 201 Created
     assert_eq!(status, 201, "Should return 201 Created for unicode title");
     let body: Value = parse_json_response(&body_bytes);
-    assert_eq!(body["title"], title, "Title should preserve unicode characters");
+    assert_eq!(
+        body["title"], title,
+        "Title should preserve unicode characters"
+    );
 }
 
 #[tokio::test]
@@ -260,7 +275,8 @@ async fn test_create_task_with_missing_description() {
     assert_eq!(status, 201, "Should return 201 Created");
     let body: Value = parse_json_response(&body_bytes);
     assert_eq!(
-        body["description"], serde_json::Value::Null,
+        body["description"],
+        serde_json::Value::Null,
         "Description should be null"
     );
 }
@@ -297,7 +313,10 @@ async fn test_create_task_returns_400_with_malformed_json() {
     let (status, _) = make_request(&app, "POST", "/tasks", Some(create_json_body(body))).await;
 
     // Assert: Verify 400 Bad Request
-    assert_eq!(status, 400, "Should return 400 Bad Request for malformed JSON");
+    assert_eq!(
+        status, 400,
+        "Should return 400 Bad Request for malformed JSON"
+    );
 }
 
 #[tokio::test]
@@ -318,4 +337,25 @@ async fn test_create_task_returns_422_with_invalid_priority_type() {
         status, 422,
         "Should return 422 Unprocessable Entity for invalid priority type"
     );
+}
+
+#[tokio::test]
+async fn test_task_persists_to_database() {
+    let (app, pool) = common::app().await;
+    let title = generate_unique_title("persist_test");
+
+    let body = format!(
+        r#"{{"title": "{}", "description": "Test persistence", "priority": "Medium"}}"#,
+        title
+    );
+
+    let (status, body_bytes) =
+        make_request(&app, "POST", "/tasks", Some(create_json_body(&body))).await;
+
+    assert_eq!(status, 201);
+    let body: Value = parse_json_response(&body_bytes);
+    let task_id: Uuid = body["id"].as_str().unwrap().parse().unwrap();
+
+    // Verify task exists in database
+    assert!(task_exists_in_db(&pool, &task_id).await, "Task should be persisted in database");
 }

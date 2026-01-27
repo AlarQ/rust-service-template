@@ -95,8 +95,13 @@ async fn test_list_tasks_returns_400_invalid_user_id_format() {
     let invalid_user_id = "not-a-valid-uuid";
 
     // Act: Send GET request with invalid user_id
-    let (status, body_bytes) =
-        make_request(&app, "GET", &format!("/tasks?user_id={}", invalid_user_id), None).await;
+    let (status, body_bytes) = make_request(
+        &app,
+        "GET",
+        &format!("/tasks?user_id={}", invalid_user_id),
+        None,
+    )
+    .await;
 
     // Assert: Verify 400 Bad Request
     assert_eq!(
@@ -181,8 +186,7 @@ async fn test_list_tasks_with_different_priorities() {
     let _task_low = create_test_task(&pool, user_id, "Low Task", None, TaskPriority::Low).await;
     let _task_medium =
         create_test_task(&pool, user_id, "Medium Task", None, TaskPriority::Medium).await;
-    let _task_high =
-        create_test_task(&pool, user_id, "High Task", None, TaskPriority::High).await;
+    let _task_high = create_test_task(&pool, user_id, "High Task", None, TaskPriority::High).await;
     let _task_critical = create_test_task(
         &pool,
         user_id,
@@ -226,8 +230,14 @@ async fn test_list_tasks_only_returns_user_tasks() {
         create_test_task(&pool, user_id_1, "User 1 Task 1", None, TaskPriority::High).await;
     let _task2_user1 =
         create_test_task(&pool, user_id_1, "User 1 Task 2", None, TaskPriority::Low).await;
-    let _task1_user2 =
-        create_test_task(&pool, user_id_2, "User 2 Task 1", None, TaskPriority::Medium).await;
+    let _task1_user2 = create_test_task(
+        &pool,
+        user_id_2,
+        "User 2 Task 1",
+        None,
+        TaskPriority::Medium,
+    )
+    .await;
 
     // Act: List tasks for user_id_1 only
     let (status, body_bytes) =
@@ -264,9 +274,14 @@ async fn test_list_tasks_with_and_without_descriptions() {
         TaskPriority::High,
     )
     .await;
-    let _task_without_desc =
-        create_test_task(&pool, user_id, "Task without description", None, TaskPriority::Medium)
-            .await;
+    let _task_without_desc = create_test_task(
+        &pool,
+        user_id,
+        "Task without description",
+        None,
+        TaskPriority::Medium,
+    )
+    .await;
 
     // Act: Send GET request to list tasks
     let (status, body_bytes) =
@@ -279,11 +294,15 @@ async fn test_list_tasks_with_and_without_descriptions() {
     assert_eq!(tasks.len(), 2, "Should return 2 tasks");
 
     // Verify one has description and one is null
-    let descriptions: Vec<&serde_json::Value> =
-        tasks.iter().map(|t| &t["description"]).collect();
+    let descriptions: Vec<&serde_json::Value> = tasks.iter().map(|t| &t["description"]).collect();
     let has_null = descriptions.iter().any(|d| d.is_null());
-    let has_value = descriptions.iter().any(|d| d.is_string() && d.as_str().is_some());
-    assert!(has_null && has_value, "Should have one null and one string description");
+    let has_value = descriptions
+        .iter()
+        .any(|d| d.is_string() && d.as_str().is_some());
+    assert!(
+        has_null && has_value,
+        "Should have one null and one string description"
+    );
 }
 
 #[tokio::test]
@@ -312,8 +331,5 @@ async fn test_list_tasks_with_single_task() {
     let body: Value = parse_json_response(&body_bytes);
     assert!(body.is_array(), "Response should be an array");
     assert_eq!(body.as_array().unwrap().len(), 1, "Should return 1 task");
-    assert_eq!(
-        body[0]["title"], "Single Task",
-        "Task title should match"
-    );
+    assert_eq!(body[0]["title"], "Single Task", "Task title should match");
 }

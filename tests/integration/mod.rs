@@ -8,9 +8,14 @@ use uuid::Uuid;
 
 use crate::common;
 use axum::Router;
-use rust_service_template::domain::task::models::{Task, TaskPriority};
-use rust_service_template::infrastructure::task::PostgresTaskRepository;
-use rust_service_template::{common::UserId, domain::interfaces::task_repository::TaskRepository};
+use rust_service_template::{
+    common::UserId,
+    domain::{
+        interfaces::task_repository::TaskRepository,
+        task::models::{Task, TaskPriority},
+    },
+    infrastructure::task::PostgresTaskRepository,
+};
 
 /// Helper function to make unauthenticated HTTP requests
 ///
