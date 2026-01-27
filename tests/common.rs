@@ -42,7 +42,7 @@ pub async fn app() -> (Router, Arc<sqlx::PgPool>) {
         // Set server configuration for tests
         std::env::set_var("RUST_SERVICE_TEMPLATE__SERVER_HOST", "127.0.0.1");
         std::env::set_var("RUST_SERVICE_TEMPLATE__SERVER_PORT", "8080");
-        
+
         // Use DATABASE_URL from environment (for CI) or fall back to local dev default
         if std::env::var("RUST_SERVICE_TEMPLATE__DATABASE_URL").is_err() {
             if let Ok(database_url) = std::env::var("DATABASE_URL") {
@@ -80,7 +80,7 @@ pub async fn app() -> (Router, Arc<sqlx::PgPool>) {
     let mut db_pool = None;
     let mut retries = 5;
     let mut delay = std::time::Duration::from_secs(2);
-    
+
     while db_pool.is_none() && retries > 0 {
         match PgPoolOptions::new()
             .max_connections(20)
@@ -108,7 +108,7 @@ pub async fn app() -> (Router, Arc<sqlx::PgPool>) {
             }
         }
     }
-    
+
     let db_pool = db_pool.expect("Failed to connect to database");
 
     // Run migrations
