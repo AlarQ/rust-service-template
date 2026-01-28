@@ -1,0 +1,28 @@
+name: 'Setup SQLx'
+description: 'Install sqlx-cli and run database migrations'
+
+inputs:
+  database_url:
+    description: 'PostgreSQL connection URL'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache sqlx-cli
+      uses: actions/cache@v4
+      id: cache-sqlx
+      with:
+        path: ~/.cargo/bin/sqlx
+        key: ${{ runner.os }}-sqlx-cli-0.8
+
+    - name: Install sqlx-cli
+      if: steps.cache-sqlx.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo install sqlx-cli --no-default-features --features postgres
+
+    - name: Run migrations
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database_url }}
+      run: sqlx migrate run --database-url "$DATABASE_URL"

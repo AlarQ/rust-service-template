@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_bump:
+        description: 'Force version bump type (leave empty for automatic)'
+        required: false
+        type: choice
+        options:
+          - ''
+          - patch
+          - minor
+          - major
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+
+      - name: Setup git-cliff
+        uses: ./.github/actions/setup-git-cliff
+
+      - name: Calculate version bump
+        id: version
+        uses: ./.github/actions/version-bump
+        with:
+          force_bump: ${{ github.event.inputs.force_bump }}
+
+      - name: Update Cargo.toml version
+        run: |
+          sed -i "s/^version = \".*\"/version = \"${{ steps.version.outputs.new-version }}\"/" Cargo.toml
+
+      - name: Update CHANGELOG.md
+        uses: ./.github/actions/update-changelog
+        with:
+          tag: ${{ steps.version.outputs.new-tag }}
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Create release archive
+        run: |
+          mkdir -p release
+          cp target/release/rust-service-template release/
+          cp README.md release/ 2>/dev/null || true
+          cp CHANGELOG.md release/
+          cp run.sh release/ 2>/dev/null || true
+          cd release
+          tar -czvf ../rust-service-template-${{ steps.version.outputs.new-tag }}-linux-x86_64.tar.gz *
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit version and changelog
+        run: |
+          git add Cargo.toml CHANGELOG.md
+          git commit -m "chore(release): ${{ steps.version.outputs.new-tag }}"
+          git tag -a "${{ steps.version.outputs.new-tag }}" -m "Release ${{ steps.version.outputs.new-tag }}"
+
+      - name: Push changes
+        run: |
+          git push origin main
+          git push origin "${{ steps.version.outputs.new-tag }}"
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          NOTES=$(git-cliff --latest --strip header 2>/dev/null || echo "See CHANGELOG.md for details.")
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.new-tag }}
+          name: Release ${{ steps.version.outputs.new-tag }}
+          body: |
+            ## Release ${{ steps.version.outputs.new-tag }}
+
+            ### Changes
+            ${{ steps.release_notes.outputs.notes }}
+
+            ### Installation
+            ```bash
+            # Download the release
+            wget https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.new-tag }}/rust-service-template-${{ steps.version.outputs.new-tag }}-linux-x86_64.tar.gz
+
+            # Extract
+            tar -xzf rust-service-template-${{ steps.version.outputs.new-tag }}-linux-x86_64.tar.gz
+
+            # Run
+            ./rust-service-template
+            ```
+
+            ### Docker
+            ```bash
+            # Build image
+            docker build -t rust-service-template:${{ steps.version.outputs.new-tag }} .
+
+            # Run with dependencies
+            docker-compose up -d
+            docker run -p 8080:8080 rust-service-template:${{ steps.version.outputs.new-tag }}
+            ```
+          files: |
+            rust-service-template-${{ steps.version.outputs.new-tag }}-linux-x86_64.tar.gz
+          draft: false
+          prerelease: false
+
+      - name: Update latest tag
+        run: |
+          git tag -f latest
+          git push -f origin latest

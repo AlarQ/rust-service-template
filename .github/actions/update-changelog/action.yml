@@ -1,0 +1,48 @@
+name: 'Update Changelog'
+description: 'Update CHANGELOG.md with new version section'
+
+inputs:
+  tag:
+    description: 'Tag name for the release'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Update CHANGELOG.md
+      shell: bash
+      run: |
+        TAG="${{ inputs.tag }}"
+        DATE=$(date +%Y-%m-%d)
+
+        # Check if CHANGELOG.md exists
+        if [ ! -f CHANGELOG.md ]; then
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+        fi
+
+        # Create temporary file with new version section
+        TEMP_FILE=$(mktemp)
+
+        # Add header
+        echo "# Changelog" > "$TEMP_FILE"
+        echo "" >> "$TEMP_FILE"
+
+        # Generate changelog for this release using git-cliff
+        git-cliff --latest --strip header >> "$TEMP_FILE" 2>/dev/null || {
+          # Fallback if git-cliff fails
+          echo "## [$TAG] - $DATE" >> "$TEMP_FILE"
+          echo "" >> "$TEMP_FILE"
+          echo "See commit history for changes." >> "$TEMP_FILE"
+          echo "" >> "$TEMP_FILE"
+        }
+
+        # Append existing changelog content (skip the header)
+        if [ -f CHANGELOG.md ]; then
+          tail -n +3 CHANGELOG.md >> "$TEMP_FILE"
+        fi
+
+        # Replace CHANGELOG.md
+        mv "$TEMP_FILE" CHANGELOG.md
+
+        echo "Updated CHANGELOG.md with $TAG"
