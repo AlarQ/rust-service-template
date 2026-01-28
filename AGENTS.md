@@ -29,6 +29,11 @@ You are a Rust development assistant for this service. When the user explicitly 
 - Never guess or invent Rust syntax — verify accuracy
 - Provide idiomatic Rust code following established patterns
 
+#### Mandatory Code Quality Check
+- **AFTER EVERY TASK**: Run `cargo watch -x 'clippy --all-targets --all-features -- -D warnings'` and fix all errors
+- All clippy warnings must be resolved before considering a task complete
+- This ensures code quality and catches potential issues early
+
 ---
 
 ## Project Context
@@ -89,12 +94,17 @@ cargo fmt
 # Run linter
 cargo clippy
 
+# Mandatory: Run clippy with all warnings as errors (must be run after every task)
+cargo watch -x 'clippy --all-targets --all-features -- -D warnings'
+
 # Check without building
 cargo check
 
 # Environment setup for development
 source ./run.sh  # Sets all required environment variables
 ```
+
+**⚠️ IMPORTANT**: After completing any task, you MUST run `cargo watch -x 'clippy --all-targets --all-features -- -D warnings'` and fix all errors before considering the task complete.
 
 ### Database Operations
 ```bash

@@ -1,6 +1,25 @@
 use super::super::*;
 use rust_service_template::domain::task::models::{TaskPriority, TaskStatus};
 
+// Helper functions to convert domain enums to database string representations
+fn status_to_db_string(status: TaskStatus) -> &'static str {
+    match status {
+        TaskStatus::Pending => "PENDING",
+        TaskStatus::InProgress => "IN_PROGRESS",
+        TaskStatus::Completed => "COMPLETED",
+        TaskStatus::Cancelled => "CANCELLED",
+    }
+}
+
+fn priority_to_db_string(priority: TaskPriority) -> &'static str {
+    match priority {
+        TaskPriority::Low => "LOW",
+        TaskPriority::Medium => "MEDIUM",
+        TaskPriority::High => "HIGH",
+        TaskPriority::Critical => "CRITICAL",
+    }
+}
+
 #[tokio::test]
 async fn test_get_task_returns_200_for_existing_task() {
     // Objective: Verify retrieving an existing task returns correct data
@@ -139,15 +158,15 @@ async fn test_get_task_returns_200_for_completed_task() {
     sqlx::query(
         r#"
         INSERT INTO tasks (id, user_id, title, description, status, priority, created_at, updated_at, completed_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5::task_status, $6::task_priority, $7, $8, $9)
         "#,
     )
     .bind(task_id)
-    .bind(user_id.0)
+    .bind(user_id.into_inner())
     .bind(title)
     .bind::<Option<String>>(None)
-    .bind(TaskStatus::Completed)
-    .bind(TaskPriority::Medium)
+    .bind(status_to_db_string(TaskStatus::Completed))
+    .bind(priority_to_db_string(TaskPriority::Medium))
     .bind(completed_at)
     .bind(completed_at)
     .bind(completed_at)
@@ -187,15 +206,15 @@ async fn test_get_task_returns_200_for_task_with_in_progress_status() {
     sqlx::query(
         r#"
         INSERT INTO tasks (id, user_id, title, description, status, priority, created_at, updated_at, completed_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5::task_status, $6::task_priority, $7, $8, $9)
         "#,
     )
     .bind(task_id)
-    .bind(user_id.0)
+    .bind(user_id.into_inner())
     .bind(title)
     .bind::<Option<String>>(None)
-    .bind(TaskStatus::InProgress)
-    .bind(TaskPriority::High)
+    .bind(status_to_db_string(TaskStatus::InProgress))
+    .bind(priority_to_db_string(TaskPriority::High))
     .bind(now)
     .bind(now)
     .bind::<Option<chrono::DateTime<chrono::Utc>>>(None)
@@ -228,15 +247,15 @@ async fn test_get_task_returns_200_for_task_with_cancelled_status() {
     sqlx::query(
         r#"
         INSERT INTO tasks (id, user_id, title, description, status, priority, created_at, updated_at, completed_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5::task_status, $6::task_priority, $7, $8, $9)
         "#,
     )
     .bind(task_id)
-    .bind(user_id.0)
+    .bind(user_id.into_inner())
     .bind(title)
     .bind::<Option<String>>(None)
-    .bind(TaskStatus::Cancelled)
-    .bind(TaskPriority::Low)
+    .bind(status_to_db_string(TaskStatus::Cancelled))
+    .bind(priority_to_db_string(TaskPriority::Low))
     .bind(now)
     .bind(now)
     .bind::<Option<chrono::DateTime<chrono::Utc>>>(None)

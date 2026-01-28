@@ -33,6 +33,8 @@ use crate::{
         ErrorCode,
         crate::api::models::tasks::TaskResponse,
         crate::api::models::tasks::CreateTaskRequest,
+        crate::api::models::tasks::TaskStatusSchema,
+        crate::api::models::tasks::TaskPrioritySchema,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),
