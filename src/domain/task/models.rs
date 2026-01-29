@@ -4,14 +4,23 @@ use uuid::Uuid;
 
 use crate::{common::UserId, domain::errors::DomainError};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(transparent)]
-pub struct TaskId(pub Uuid);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct TaskId(Uuid);
 
 impl TaskId {
     #[must_use]
     pub fn new() -> Self {
         Self(Uuid::new_v4())
+    }
+
+    #[must_use]
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
+
+    #[must_use]
+    pub fn as_uuid(&self) -> &Uuid {
+        &self.0
     }
 }
 
@@ -33,10 +42,7 @@ impl std::fmt::Display for TaskId {
     }
 }
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, utoipa::ToSchema, Default,
-)]
-#[sqlx(type_name = "task_status", rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum TaskStatus {
     #[default]
     Pending,
@@ -45,10 +51,7 @@ pub enum TaskStatus {
     Cancelled,
 }
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, utoipa::ToSchema, Default,
-)]
-#[sqlx(type_name = "task_priority", rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum TaskPriority {
     Low,
     #[default]
@@ -58,7 +61,7 @@ pub enum TaskPriority {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Title(pub String);
+pub struct Title(String);
 
 impl Title {
     const MIN_LENGTH: usize = 1;

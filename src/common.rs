@@ -2,9 +2,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// Common user ID type used across the application
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(transparent)]
-pub struct UserId(pub Uuid);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct UserId(Uuid);
 
 impl UserId {
     /// Create a new random user ID
@@ -17,6 +16,18 @@ impl UserId {
     #[must_use]
     pub const fn from_uuid(uuid: Uuid) -> Self {
         Self(uuid)
+    }
+
+    /// Get the inner UUID value
+    #[must_use]
+    pub fn into_inner(self) -> Uuid {
+        self.0
+    }
+
+    /// Get a reference to the inner UUID value
+    #[must_use]
+    pub fn as_uuid(&self) -> &Uuid {
+        &self.0
     }
 }
 

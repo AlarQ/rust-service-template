@@ -3,13 +3,34 @@ use utoipa::ToSchema;
 
 use crate::domain::task::models::{Task, TaskPriority, TaskStatus};
 
+// Schema types for OpenAPI documentation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[schema(as = TaskStatus)]
+pub enum TaskStatusSchema {
+    Pending,
+    InProgress,
+    Completed,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[schema(as = TaskPriority)]
+pub enum TaskPrioritySchema {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct TaskResponse {
     pub id: String,
     pub user_id: String,
     pub title: String,
     pub description: Option<String>,
+    #[schema(value_type = TaskStatusSchema)]
     pub status: TaskStatus,
+    #[schema(value_type = TaskPrioritySchema)]
     pub priority: TaskPriority,
     pub created_at: String,
     pub updated_at: String,
@@ -37,6 +58,7 @@ pub struct CreateTaskRequest {
     pub title: String,
     pub description: Option<String>,
     #[serde(default)]
+    #[schema(value_type = TaskPrioritySchema)]
     pub priority: Option<TaskPriority>,
 }
 

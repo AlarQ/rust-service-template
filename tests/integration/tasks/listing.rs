@@ -1,6 +1,25 @@
 use super::super::*;
 use rust_service_template::domain::task::models::{TaskPriority, TaskStatus};
 
+// Helper functions to convert domain enums to database string representations
+fn status_to_db_string(status: TaskStatus) -> &'static str {
+    match status {
+        TaskStatus::Pending => "PENDING",
+        TaskStatus::InProgress => "IN_PROGRESS",
+        TaskStatus::Completed => "COMPLETED",
+        TaskStatus::Cancelled => "CANCELLED",
+    }
+}
+
+fn priority_to_db_string(priority: TaskPriority) -> &'static str {
+    match priority {
+        TaskPriority::Low => "LOW",
+        TaskPriority::Medium => "MEDIUM",
+        TaskPriority::High => "HIGH",
+        TaskPriority::Critical => "CRITICAL",
+    }
+}
+
 #[tokio::test]
 async fn test_list_tasks_returns_200_with_tasks() {
     // Objective: Verify listing tasks by user_id returns all user's tasks
@@ -39,9 +58,9 @@ async fn test_list_tasks_returns_200_with_tasks() {
 
     // Verify tasks are in descending order by created_at (most recent first)
     let tasks = body.as_array().unwrap();
-    assert_eq!(tasks[0]["title"], task3.title.0);
-    assert_eq!(tasks[1]["title"], task2.title.0);
-    assert_eq!(tasks[2]["title"], task1.title.0);
+    assert_eq!(tasks[0]["title"], task3.title.value());
+    assert_eq!(tasks[1]["title"], task2.title.value());
+    assert_eq!(tasks[2]["title"], task1.title.value());
 }
 
 #[tokio::test]
@@ -133,15 +152,15 @@ async fn test_list_tasks_with_different_statuses() {
         sqlx::query(
             r#"
             INSERT INTO tasks (id, user_id, title, description, status, priority, created_at, updated_at, completed_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            VALUES ($1, $2, $3, $4, $5::task_status, $6::task_priority, $7, $8, $9)
             "#,
         )
         .bind(task_id)
-        .bind(user_id.0)
+        .bind(user_id.into_inner())
         .bind(format!("Task {}", i))
         .bind::<Option<String>>(None)
-        .bind(*status)
-        .bind(TaskPriority::Medium)
+        .bind(status_to_db_string(*status))
+        .bind(priority_to_db_string(TaskPriority::Medium))
         .bind(now)
         .bind(now)
         .bind(if *status == TaskStatus::Completed {
