@@ -35,7 +35,7 @@ This checklist tracks which parts of the template instructions have been impleme
 - [x] **09-api-router.md** - OpenAPI JSON endpoint (`/api-docs/openapi.json`)
 - [x] **09-api-router.md** - 404 middleware for logging (`trace_404_middleware`)
 - [x] **10-health-checks.md** - Liveness endpoint (`/health`)
-- [ ] **10-health-checks.md** - Readiness endpoint (`/ready`) with database check
+- [x] **10-health-checks.md** - Readiness endpoint (`/ready`) with database check
 - [ ] **11-cors.md** - CORS layer configuration (permissive or production)
 - [ ] **12-jwt-authentication.md** - JWT extractor (`JwtExtractor` struct)
 - [ ] **12-jwt-authentication.md** - JWT claims struct (`JwtClaims`)
@@ -86,13 +86,12 @@ This checklist tracks which parts of the template instructions have been impleme
 
 ## Summary
 
-**Implemented:** 41 items
-**Not Implemented:** 15 items
+**Implemented:** 42 items
+**Not Implemented:** 14 items
 
 ### Key Missing Components
 
 1. **API Layer:**
-   - Readiness endpoint (`/ready`)
    - CORS configuration
    - JWT authentication (`api/auth.rs`)
 

@@ -4,7 +4,9 @@ pub mod tasks;
 
 use std::sync::Arc;
 
-use axum::{http::StatusCode, middleware, response::IntoResponse, routing::get, Router};
+use axum::{
+    extract::State, http::StatusCode, middleware, response::IntoResponse, routing::get, Router,
+};
 use tower_http::trace::TraceLayer;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -24,6 +26,7 @@ use crate::{
 #[openapi(
     paths(
         health_check,
+        readiness_check,
         get_task_handler,
         list_tasks_handler,
         create_task_handler,
@@ -47,6 +50,7 @@ pub struct ApiDoc;
 pub async fn build_app_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/health", get(health_check))
+        .route("/ready", get(readiness_check))
         .route("/tasks", get(list_tasks_handler).post(create_task_handler))
         .route("/tasks/{id}", get(get_task_handler))
         .with_state(state)
@@ -67,6 +71,26 @@ pub async fn build_app_router(state: Arc<AppState>) -> Router {
 )]
 async fn health_check() -> &'static str {
     "OK"
+}
+
+/// Readiness check endpoint - verifies database connectivity
+#[utoipa::path(
+    get,
+    path = "/ready",
+    tag = "health",
+    responses(
+        (status = 200, description = "Service is ready"),
+        (status = 503, description = "Service not ready")
+    )
+)]
+pub async fn readiness_check(State(app_state): State<Arc<AppState>>) -> impl IntoResponse {
+    match crate::domain::task::check_readiness(&app_state.task_repository).await {
+        Ok(()) => (StatusCode::OK, "Ready"),
+        Err(e) => {
+            tracing::error!("Readiness check failed: {}", e);
+            (StatusCode::SERVICE_UNAVAILABLE, "Database unavailable")
+        }
+    }
 }
 
 /// OpenAPI JSON endpoint with pretty-printed output
