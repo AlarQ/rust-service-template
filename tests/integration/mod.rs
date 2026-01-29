@@ -1,3 +1,4 @@
+pub mod health;
 pub mod tasks;
 
 use axum::{body::Body, http::Request};
