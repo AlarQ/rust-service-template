@@ -4,7 +4,9 @@ pub mod tasks;
 
 use std::sync::Arc;
 
-use axum::{extract::State, http::StatusCode, middleware, response::IntoResponse, routing::get, Router};
+use axum::{
+    extract::State, http::StatusCode, middleware, response::IntoResponse, routing::get, Router,
+};
 use tower_http::trace::TraceLayer;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
