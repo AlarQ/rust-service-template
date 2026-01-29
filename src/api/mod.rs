@@ -5,9 +5,17 @@ pub mod tasks;
 use std::sync::Arc;
 
 use axum::{
-    extract::State, http::StatusCode, middleware, response::IntoResponse, routing::get, Router,
+    extract::State,
+    http::{Method, StatusCode},
+    middleware,
+    response::IntoResponse,
+    routing::get,
+    Router,
 };
-use tower_http::trace::TraceLayer;
+use tower_http::{
+    cors::{Any, CorsLayer},
+    trace::TraceLayer,
+};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -19,7 +27,7 @@ use crate::{
             create_task_handler, get_task_handler, list_tasks_handler,
         },
     },
-    config::AppState,
+    config::{AppState, CorsConfig},
 };
 
 #[derive(OpenApi)]
@@ -48,16 +56,77 @@ pub struct ApiDoc;
 
 /// Build the complete application router with all routes and middleware
 pub async fn build_app_router(state: Arc<AppState>) -> Router {
+    let cors_layer = build_cors_layer(&state.env.cors_config);
+
+    tracing::info!(
+        "CORS configured - origins: {:?}, methods: {:?}, credentials: {}",
+        state.env.cors_config.allowed_origins,
+        state.env.cors_config.allowed_methods,
+        state.env.cors_config.allow_credentials
+    );
+
     Router::new()
         .route("/health", get(health_check))
         .route("/ready", get(readiness_check))
         .route("/tasks", get(list_tasks_handler).post(create_task_handler))
         .route("/tasks/{id}", get(get_task_handler))
-        .with_state(state)
-        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
         .route("/api-docs/openapi.json", get(openapi_json_handler))
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-doc/openapi.json", ApiDoc::openapi()))
+        .with_state(state)
         .layer(TraceLayer::new_for_http())
         .layer(middleware::from_fn(trace_404_middleware))
+        .layer(cors_layer)
+}
+
+/// Build a CORS layer based on the provided configuration
+///
+/// Handles both wildcard ("*") and specific origins/methods/headers.
+/// Wildcard origins cannot be used with credentials enabled.
+fn build_cors_layer(config: &CorsConfig) -> CorsLayer {
+    let mut cors = CorsLayer::new();
+
+    // Configure allowed origins
+    cors = if config.allowed_origins.contains(&"*".to_string()) {
+        cors.allow_origin(Any)
+    } else {
+        let origins: Vec<_> = config
+            .allowed_origins
+            .iter()
+            .filter_map(|origin| origin.parse().ok())
+            .collect();
+        cors.allow_origin(origins)
+    };
+
+    // Configure allowed methods
+    cors = if config.allowed_methods.contains(&"*".to_string()) {
+        cors.allow_methods(Any)
+    } else {
+        let methods: Vec<Method> = config
+            .allowed_methods
+            .iter()
+            .filter_map(|method| method.parse().ok())
+            .collect();
+        cors.allow_methods(methods)
+    };
+
+    // Configure allowed headers
+    cors = if config.allowed_headers.contains(&"*".to_string()) {
+        cors.allow_headers(Any)
+    } else {
+        let headers: Vec<_> = config
+            .allowed_headers
+            .iter()
+            .filter_map(|header| header.parse().ok())
+            .collect();
+        cors.allow_headers(headers)
+    };
+
+    // Configure credentials and max age
+    cors = cors
+        .allow_credentials(config.allow_credentials)
+        .max_age(std::time::Duration::from_secs(config.max_age));
+
+    cors
 }
 
 /// Health check endpoint

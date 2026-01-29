@@ -26,6 +26,8 @@ pub struct AppConfig {
     pub jwt_secret: String,
     #[serde(default)]
     pub kafka_config: KafkaConfig,
+    #[serde(default)]
+    pub cors_config: CorsConfig,
 }
 
 fn default_server_host() -> String {
@@ -105,6 +107,70 @@ impl Default for KafkaConfig {
     }
 }
 
+/// CORS (Cross-Origin Resource Sharing) configuration
+///
+/// Controls which origins, methods, and headers are allowed for cross-origin requests.
+/// This is essential for browser-based clients accessing the API from different domains.
+#[derive(Debug, Clone, Deserialize)]
+pub struct CorsConfig {
+    /// List of allowed origins for CORS requests
+    /// Use ["*"] to allow all origins (development only)
+    /// Use specific origins like ["https://example.com"] for production
+    #[serde(default = "default_allowed_origins")]
+    pub allowed_origins: Vec<String>,
+    /// List of allowed HTTP methods
+    #[serde(default = "default_allowed_methods")]
+    pub allowed_methods: Vec<String>,
+    /// List of allowed HTTP headers
+    /// Use ["*"] to allow all headers (development only)
+    #[serde(default = "default_allowed_headers")]
+    pub allowed_headers: Vec<String>,
+    /// Whether to allow credentials (cookies, authorization headers) in CORS requests
+    #[serde(default = "default_allow_credentials")]
+    pub allow_credentials: bool,
+    /// Maximum age (in seconds) for CORS preflight cache
+    #[serde(default = "default_max_age")]
+    pub max_age: u64,
+}
+
+fn default_allowed_origins() -> Vec<String> {
+    vec!["*".to_string()]
+}
+
+fn default_allowed_methods() -> Vec<String> {
+    vec![
+        "GET".to_string(),
+        "POST".to_string(),
+        "PUT".to_string(),
+        "DELETE".to_string(),
+        "OPTIONS".to_string(),
+    ]
+}
+
+fn default_allowed_headers() -> Vec<String> {
+    vec!["*".to_string()]
+}
+
+fn default_allow_credentials() -> bool {
+    false
+}
+
+fn default_max_age() -> u64 {
+    3600
+}
+
+impl Default for CorsConfig {
+    fn default() -> Self {
+        Self {
+            allowed_origins: default_allowed_origins(),
+            allowed_methods: default_allowed_methods(),
+            allowed_headers: default_allowed_headers(),
+            allow_credentials: default_allow_credentials(),
+            max_age: default_max_age(),
+        }
+    }
+}
+
 impl AppConfig {
     /// Initialize configuration from environment variables
     ///
@@ -114,6 +180,11 @@ impl AppConfig {
     /// - `RUST_SERVICE_TEMPLATE__DATABASE_URL`
     /// - `RUST_SERVICE_TEMPLATE__SERVER_PORT`
     /// - `RUST_SERVICE_TEMPLATE__POOL_CONFIG__MAX_CONNECTIONS`
+    /// - `RUST_SERVICE_TEMPLATE__CORS_CONFIG__ALLOWED_ORIGINS` (comma-separated)
+    /// - `RUST_SERVICE_TEMPLATE__CORS_CONFIG__ALLOWED_METHODS` (comma-separated)
+    /// - `RUST_SERVICE_TEMPLATE__CORS_CONFIG__ALLOWED_HEADERS` (comma-separated)
+    /// - `RUST_SERVICE_TEMPLATE__CORS_CONFIG__ALLOW_CREDENTIALS`
+    /// - `RUST_SERVICE_TEMPLATE__CORS_CONFIG__MAX_AGE`
     pub fn init() -> Result<Self, ConfigError> {
         dotenvy::dotenv().ok();
 
