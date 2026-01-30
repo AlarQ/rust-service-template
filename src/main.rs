@@ -11,7 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use rust_service_template::{
     api::server_start,
     config::{AppConfig, AppState},
-    infrastructure::task::PostgresTaskRepository,
+    infrastructure::{kafka_producer::KafkaEventService, task::PostgresTaskRepository},
 };
 
 #[tokio::main]
@@ -62,10 +62,18 @@ async fn main() -> Result<()> {
     sqlx::migrate!().run(&db_pool).await?;
     tracing::info!("Migrations finished");
 
+    tracing::info!("Initializing Kafka event producer...");
+    let event_producer = Arc::new(
+        KafkaEventService::new(&config.kafka_config)
+            .map_err(|e| anyhow::anyhow!("Failed to initialize Kafka producer: {e}"))?,
+    );
+    tracing::info!("Kafka event producer initialized successfully");
+
     let app_state = Arc::new(AppState {
         db_pool: db_pool.clone(),
         env: config.clone(),
         task_repository: Arc::new(PostgresTaskRepository::new(db_pool)),
+        event_producer,
     });
 
     server_start(app_state, config).await

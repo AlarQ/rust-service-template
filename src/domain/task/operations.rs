@@ -10,7 +10,7 @@ use crate::{
 ///
 /// Returns an error if the task is not found.
 pub async fn get_task(id: TaskId, repo: Arc<dyn TaskRepository>) -> Result<Task, DomainError> {
-    let result = repo.get(id).await?;
+    let result: Option<Task> = repo.get(id).await?;
     result.ok_or_else(|| DomainError::not_found("Task", id.to_string()))
 }
 

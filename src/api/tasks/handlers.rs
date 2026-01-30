@@ -71,7 +71,7 @@ pub async fn list_tasks_handler(
         .await
         .map_err(ApiErrorResponse::from)?;
 
-    Ok(Json(tasks.into_iter().map(|t| t.into()).collect()))
+    Ok(Json(tasks.into_iter().map(|t: Task| t.into()).collect()))
 }
 
 #[utoipa::path(

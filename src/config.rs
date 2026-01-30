@@ -3,7 +3,7 @@ use serde::Deserialize;
 use sqlx::PgPool;
 use std::sync::Arc;
 
-use crate::domain::interfaces::task_repository::TaskRepository;
+use crate::domain::interfaces::{event_producer::EventProducer, task_repository::TaskRepository};
 
 /// Application state shared across handlers
 #[derive(Clone)]
@@ -11,6 +11,7 @@ pub struct AppState {
     pub db_pool: PgPool,
     pub env: AppConfig,
     pub task_repository: Arc<dyn TaskRepository>,
+    pub event_producer: Arc<dyn EventProducer>,
 }
 
 /// Application configuration loaded from environment variables
@@ -88,6 +89,8 @@ pub struct KafkaConfig {
     pub bootstrap_servers: String,
     #[serde(default = "default_client_id")]
     pub client_id: String,
+    #[serde(default = "default_task_topic")]
+    pub task_topic: String,
 }
 
 fn default_bootstrap_servers() -> String {
@@ -98,11 +101,16 @@ fn default_client_id() -> String {
     "rust-service-template".to_string()
 }
 
+fn default_task_topic() -> String {
+    "task-events".to_string()
+}
+
 impl Default for KafkaConfig {
     fn default() -> Self {
         Self {
             bootstrap_servers: default_bootstrap_servers(),
             client_id: default_client_id(),
+            task_topic: default_task_topic(),
         }
     }
 }

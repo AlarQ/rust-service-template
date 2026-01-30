@@ -48,7 +48,9 @@ impl From<Task> for TaskResponse {
             priority: task.priority,
             created_at: task.created_at.to_rfc3339(),
             updated_at: task.updated_at.to_rfc3339(),
-            completed_at: task.completed_at.map(|dt| dt.to_rfc3339()),
+            completed_at: task
+                .completed_at
+                .map(|dt: chrono::DateTime<chrono::Utc>| dt.to_rfc3339()),
         }
     }
 }

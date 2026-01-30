@@ -4,6 +4,11 @@ use uuid::Uuid;
 
 use crate::{common::UserId, domain::errors::DomainError};
 
+pub mod events;
+
+// Re-export event types for convenience
+pub use events::{EventMetadata, TaskEvent, TaskEventData, TaskEventType};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct TaskId(Uuid);
 

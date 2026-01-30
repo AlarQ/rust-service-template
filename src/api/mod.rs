@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod error;
 pub mod models;
 pub mod tasks;
@@ -42,6 +43,7 @@ use crate::{
     components(schemas(
         ApiErrorResponse,
         ErrorCode,
+        crate::api::auth::JwtClaims,
         crate::api::models::tasks::TaskResponse,
         crate::api::models::tasks::CreateTaskRequest,
         crate::api::models::tasks::TaskStatusSchema,
