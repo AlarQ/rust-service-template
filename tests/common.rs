@@ -1,13 +1,29 @@
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use axum::Router;
 use rust_service_template::{
     api::build_app_router,
     config::{AppConfig, AppState},
+    domain::{
+        errors::DomainError, interfaces::event_producer::EventProducer,
+        task::models::events::TaskEvent,
+    },
     infrastructure::task::PostgresTaskRepository,
 };
 use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+/// Mock event producer for testing (does nothing)
+struct MockEventProducer;
+
+#[async_trait]
+impl EventProducer for MockEventProducer {
+    async fn publish_task_event(&self, _event: TaskEvent) -> Result<(), DomainError> {
+        // Do nothing in tests - we don't actually publish events during testing
+        Ok(())
+    }
+}
 
 static INIT: std::sync::Once = std::sync::Once::new();
 
@@ -119,11 +135,13 @@ pub async fn app() -> (Router, Arc<sqlx::PgPool>) {
 
     let db_arc = Arc::new(db_pool.clone());
     let task_repo = Arc::new(PostgresTaskRepository::new(db_pool.clone()));
+    let event_producer = Arc::new(MockEventProducer) as Arc<dyn EventProducer>;
 
     let app_state = Arc::new(AppState {
         db_pool,
         env: config,
         task_repository: task_repo,
+        event_producer,
     });
 
     (build_app_router(app_state).await, db_arc)

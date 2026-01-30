@@ -36,11 +36,11 @@ This checklist tracks which parts of the template instructions have been impleme
 - [x] **09-api-router.md** - 404 middleware for logging (`trace_404_middleware`)
 - [x] **10-health-checks.md** - Liveness endpoint (`/health`)
 - [x] **10-health-checks.md** - Readiness endpoint (`/ready`) with database check
-- [ ] **11-cors.md** - CORS layer configuration (permissive or production)
-- [ ] **12-jwt-authentication.md** - JWT extractor (`JwtExtractor` struct)
-- [ ] **12-jwt-authentication.md** - JWT claims struct (`JwtClaims`)
-- [ ] **12-jwt-authentication.md** - JWT validation function (`extract_jwt_claims`)
-- [ ] **12-jwt-authentication.md** - `api/auth.rs` module
+- [x] **11-cors.md** - CORS layer configuration (permissive or production)
+- [x] **12-jwt-authentication.md** - JWT extractor (`JwtExtractor` struct)
+- [x] **12-jwt-authentication.md** - JWT claims struct (`JwtClaims`)
+- [x] **12-jwt-authentication.md** - JWT validation function (`extract_jwt_claims`)
+- [x] **12-jwt-authentication.md** - `api/auth.rs` module
 - [x] **13-api-handlers.md** - Feature-specific handler modules (`api/{feature}/handlers.rs`)
 - [x] **13-api-handlers.md** - Handler functions with `#[utoipa::path]` annotations
 - [x] **13-api-handlers.md** - Handler route definitions
@@ -62,10 +62,10 @@ This checklist tracks which parts of the template instructions have been impleme
 
 ## Phase 5: Infrastructure
 
-- [ ] **20-event-schema.md** - Event schema definitions
-- [ ] **20-event-schema.md** - Event factory methods (`new_created`, `new_updated`, `new_deleted`)
-- [ ] **21-kafka-producer.md** - Kafka producer implementation (`infrastructure/kafka_producer.rs`)
-- [ ] **21-kafka-producer.md** - Event producer trait implementation
+- [x] **20-event-schema.md** - Event schema definitions
+- [x] **20-event-schema.md** - Event factory methods (`new_created`, `new_updated`, `new_deleted`)
+- [x] **21-kafka-producer.md** - Kafka producer implementation (`infrastructure/kafka_producer.rs`)
+- [x] **21-kafka-producer.md** - Event producer trait implementation
 
 ## Phase 6: Testing and DevOps
 
