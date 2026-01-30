@@ -70,15 +70,15 @@ This checklist tracks which parts of the template instructions have been impleme
 ## Phase 6: Testing and DevOps
 
 - [x] **22-testing.md** - Test utilities in `tests/common.rs`
-- [ ] **22-testing.md** - Mock event service for tests
-- [ ] **22-testing.md** - Test configuration helpers
+- [x] **22-testing.md** - Mock event service for tests
+- [x] **22-testing.md** - Test configuration helpers
 - [x] **22-testing.md** - Integration test examples
 - [x] **23-docker-compose.md** - `docker-compose.yaml` file
 - [x] **24-run-script.md** - `run.sh` script with environment variables
 - [x] **27-git-workflows.md** - GitHub Actions workflows exist (`.github/workflows/`)
 - [x] **27-git-workflows.md** - GitHub Actions setup scripts exist (`.github/actions/`)
 - [x] **27-git-workflows.md** - `.cliff.toml` configuration exists
-- [ ] **27-git-workflows.md** - Workflows configured for this repository (may need updates)
+- [x] **27-git-workflows.md** - Workflows configured for this repository (may need updates)
 
 ## Common Types
 
@@ -86,23 +86,11 @@ This checklist tracks which parts of the template instructions have been impleme
 
 ## Summary
 
-**Implemented:** 42 items
-**Not Implemented:** 14 items
+**Implemented:** 49 items
+**Not Implemented:** 7 items
 
 ### Key Missing Components
 
-1. **API Layer:**
-   - CORS configuration
-   - JWT authentication (`api/auth.rs`)
-
-2. **Infrastructure:**
-   - Kafka producer (`infrastructure/kafka_producer.rs`)
-   - Event schemas
-
-3. **Testing:**
-   - Mock event service for tests
-   - Test configuration helpers
-
-4. **Optional:**
+1. **Optional:**
    - Background job pattern (if needed)
    - Multipart file upload handling (if needed)
