@@ -3,6 +3,14 @@ name = "rust-service-template"
 version = "0.5.0"
 edition = "2021"
 
+[[bin]]
+name = "rust-service-template"
+path = "src/main.rs"
+
+[[bin]]
+name = "rsc"
+path = "src/cli/main.rs"
+
 [[test]]
 name = "integration_tests"
 path = "tests/integration_tests.rs"
@@ -61,6 +69,11 @@ reqwest = { version = "0.13.1", features = ["json"] }
 # Observability
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# CLI dependencies
+clap = { version = "4", features = ["derive"] }
+tempfile = "3"
+walkdir = "2"
 
 [dev-dependencies]
 http-body-util = "0.1"

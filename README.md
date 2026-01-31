@@ -1,108 +1,185 @@
-# Rust Service Template - Implementation Checklist
+# Rust Service CLI (rsc)
 
-This checklist tracks which parts of the template instructions have been implemented in the codebase.
+A CLI tool for creating and scaffolding Rust microservices from the service template. This tool automates the process of setting up new Rust services with Domain-Driven Design (DDD) architecture, complete with GitHub repository creation and optional Kafka support.
 
-## Phase 1: Prerequisites and Project Setup
+## Features
 
-- [x] **01-prerequisites.md** - Git hooks script exists (`scripts/install-hooks.sh`)
-- [x] **02-code-quality-config.md** - Clippy lints in `main.rs` (`#![warn(clippy::pedantic)]`, etc.)
-- [x] **02-code-quality-config.md** - `rustfmt.toml` exists with proper configuration
-- [x] **03-project-structure.md** - Basic DDD directory structure exists (`src/domain/`, `src/api/`, `src/infrastructure/`)
-- [x] **04-architecture-rules.md** - Architecture rules documented (structure follows DDD patterns)
-- [x] **05-dependencies.md** - `Cargo.toml` includes all required dependencies
+- **GitHub Integration**: Automatically create repositories and push initial commits
+- **Local Scaffolding**: Generate services locally without GitHub integration
+- **Kafka Support**: Optional Kafka event streaming support (can be excluded with `--without-kafka`)
+- **DDD Architecture**: Generates services following Domain-Driven Design patterns
+- **Pre-configured Stack**: Axum, SQLx, PostgreSQL, JWT authentication, OpenAPI docs
 
-## Phase 2: Core Application Setup
+## Installation
 
-- [x] **06-configuration.md** - `AppConfig` struct with environment variable loading
-- [x] **06-configuration.md** - `AppState` struct with database pool
-- [x] **06-configuration.md** - Database pool configuration (`DatabasePoolConfig`)
-- [x] **06-configuration.md** - Kafka configuration struct (`KafkaConfig`)
-- [x] **07-error-handling.md** - `DomainError` enum with all variants (`NotFound`, `ValidationError`, `BusinessRuleViolation`, `ExternalError`, `Unauthorized`)
-- [x] **07-error-handling.md** - `ApiErrorResponse` struct with `ErrorCode` enum
-- [x] **07-error-handling.md** - `From<DomainError> for ApiErrorResponse` conversion
-- [x] **07-error-handling.md** - `From<sqlx::Error> for DomainError` conversion
-- [x] **08-main-and-tracing.md** - Tracing subscriber setup in `main.rs`
-- [x] **08-main-and-tracing.md** - Database pool creation with configuration
-- [x] **08-main-and-tracing.md** - SQLx migrations execution
-- [x] **08-main-and-tracing.md** - `lib.rs` module exports
+### From Source
 
-## Phase 3: API Layer
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/rust-service-template.git
+cd rust-service-template
 
-- [x] **09-api-router.md** - Basic router setup (`create_router` function)
-- [x] **09-api-router.md** - Server startup function (`server_start`)
-- [x] **09-api-router.md** - OpenAPI documentation setup (`ApiDoc` struct with `utoipa::OpenApi`)
-- [x] **09-api-router.md** - Swagger UI integration (`SwaggerUi`)
-- [x] **09-api-router.md** - OpenAPI JSON endpoint (`/api-docs/openapi.json`)
-- [x] **09-api-router.md** - 404 middleware for logging (`trace_404_middleware`)
-- [x] **10-health-checks.md** - Liveness endpoint (`/health`)
-- [x] **10-health-checks.md** - Readiness endpoint (`/ready`) with database check
-- [x] **11-cors.md** - CORS layer configuration (permissive or production)
-- [x] **12-jwt-authentication.md** - JWT extractor (`JwtExtractor` struct)
-- [x] **12-jwt-authentication.md** - JWT claims struct (`JwtClaims`)
-- [x] **12-jwt-authentication.md** - JWT validation function (`extract_jwt_claims`)
-- [x] **12-jwt-authentication.md** - `api/auth.rs` module
-- [x] **13-api-handlers.md** - Feature-specific handler modules (`api/{feature}/handlers.rs`)
-- [x] **13-api-handlers.md** - Handler functions with `#[utoipa::path]` annotations
-- [x] **13-api-handlers.md** - Handler route definitions
-- [ ] **14-file-uploads.md** - Multipart file upload handling (if needed)
+# Build the CLI
+cargo build --release --bin rsc
 
-## Phase 4: Domain Layer
+# Install to your PATH (optional)
+cp target/release/rsc ~/.local/bin/
+```
 
-- [x] **15-repository-pattern.md** - Domain interfaces directory (`domain/interfaces/`)
-- [x] **15-repository-pattern.md** - Repository trait definitions (`domain/interfaces/{feature}_repository.rs`)
-- [x] **15-repository-pattern.md** - Repository implementations (`infrastructure/{feature}.rs`)
-- [x] **15-repository-pattern.md** - Repository health check method
-- [x] **16-domain-services.md** - Domain service functions (`domain/{feature}/operations.rs`)
-- [x] **16-domain-services.md** - Free function pattern (no service structs)
-- [x] **17-value-objects.md** - Value object definitions with validation
-- [x] **17-value-objects.md** - Entity ID newtype wrappers
-- [x] **18-dto-conversion.md** - Request DTOs with `TryFrom` implementations
-- [x] **18-dto-conversion.md** - Response DTOs with `From` implementations
-- [ ] **19-background-jobs.md** - Background job pattern (if needed)
+### Prerequisites
 
-## Phase 5: Infrastructure
+- Rust 1.70+ (stable)
+- Git
+- For `create` command: GitHub personal access token
 
-- [x] **20-event-schema.md** - Event schema definitions
-- [x] **20-event-schema.md** - Event factory methods (`new_created`, `new_updated`, `new_deleted`)
-- [x] **21-kafka-producer.md** - Kafka producer implementation (`infrastructure/kafka_producer.rs`)
-- [x] **21-kafka-producer.md** - Event producer trait implementation
+## Configuration
 
-## Phase 6: Testing and DevOps
+### GitHub Token Setup
 
-- [x] **22-testing.md** - Test utilities in `tests/common.rs`
-- [ ] **22-testing.md** - Mock event service for tests
-- [ ] **22-testing.md** - Test configuration helpers
-- [x] **22-testing.md** - Integration test examples
-- [x] **23-docker-compose.md** - `docker-compose.yaml` file
-- [x] **24-run-script.md** - `run.sh` script with environment variables
-- [x] **27-git-workflows.md** - GitHub Actions workflows exist (`.github/workflows/`)
-- [x] **27-git-workflows.md** - GitHub Actions setup scripts exist (`.github/actions/`)
-- [x] **27-git-workflows.md** - `.cliff.toml` configuration exists
-- [ ] **27-git-workflows.md** - Workflows configured for this repository (may need updates)
+To use the `create` command, you need a GitHub personal access token:
 
-## Common Types
+1. Go to GitHub Settings → Developer settings → Personal access tokens
+2. Generate a new token with `repo` scope (for private repos) or `public_repo` (for public repos)
+3. Set the environment variable:
 
-- [x] **common.rs** - `UserId` type with `From`/`Into` implementations
+```bash
+export GITHUB_TOKEN="your_token_here"
+```
 
-## Summary
+Add this to your shell profile (`.bashrc`, `.zshrc`, etc.) for persistence.
 
-**Implemented:** 42 items
-**Not Implemented:** 14 items
+## Usage
 
-### Key Missing Components
+### Create Command
 
-1. **API Layer:**
-   - CORS configuration
-   - JWT authentication (`api/auth.rs`)
+Creates a new GitHub repository and generates a fully configured Rust microservice:
 
-2. **Infrastructure:**
-   - Kafka producer (`infrastructure/kafka_producer.rs`)
-   - Event schemas
+```bash
+# Create a public repository with Kafka support
+rsc create my-service --github-user myusername
 
-3. **Testing:**
-   - Mock event service for tests
-   - Test configuration helpers
+# Create a private repository
+rsc create my-service --github-user myusername --private
 
-4. **Optional:**
-   - Background job pattern (if needed)
-   - Multipart file upload handling (if needed)
+# Create without Kafka support
+rsc create my-service --github-user myusername --without-kafka
+
+# Create with description
+rsc create my-service --github-user myusername --description "My awesome service"
+```
+
+### Scaffold Command
+
+Generates a service locally without creating a GitHub repository:
+
+```bash
+# Scaffold in current directory
+rsc scaffold my-service
+
+# Scaffold to specific directory
+rsc scaffold my-service --output /path/to/output
+
+# Scaffold without Kafka support
+rsc scaffold my-service --without-kafka
+```
+
+## CLI Reference
+
+### Global Options
+
+The `rsc` CLI supports the following commands:
+
+#### `create`
+
+Create a new repository on GitHub with generated service files.
+
+```
+rsc create <NAME> --github-user <USER> [OPTIONS]
+```
+
+**Arguments:**
+- `NAME` - Name of the repository/service to create
+
+**Options:**
+- `-u, --github-user <USER>` - GitHub username or organization (required)
+- `-p, --private` - Create a private repository (default: public)
+- `-d, --description <DESC>` - Description for the repository
+- `--without-kafka` - Exclude Kafka support from the generated service
+
+#### `scaffold`
+
+Scaffold a new service locally without creating a GitHub repository.
+
+```
+rsc scaffold <NAME> [OPTIONS]
+```
+
+**Arguments:**
+- `NAME` - Name of the service to scaffold
+
+**Options:**
+- `-o, --output <PATH>` - Output directory for the scaffolded service (default: `./<NAME>`)
+- `--without-kafka` - Exclude Kafka support from the generated service
+
+## Generated Service Structure
+
+The generated service follows Domain-Driven Design principles:
+
+```
+my-service/
+├── src/
+│   ├── domain/           # Core business logic
+│   ├── infrastructure/   # External integrations
+│   ├── api/             # HTTP layer (Axum handlers)
+│   └── main.rs          # Application entry point
+├── tests/               # Integration tests
+├── migrations/          # SQLx database migrations
+├── docker-compose.yaml  # Development dependencies
+└── run.sh              # Development startup script
+```
+
+### Features Included
+
+- **Axum** web framework with middleware support
+- **SQLx** for type-safe database queries (PostgreSQL)
+- **JWT** authentication with claims extraction
+- **OpenAPI** documentation via utoipa
+- **Tracing** for structured logging
+- **Kafka** event streaming (optional)
+- **Health checks** (liveness and readiness)
+- **CORS** configuration
+- **Git hooks** for code quality
+
+## Development
+
+### Running the CLI locally
+
+```bash
+# Set your GitHub token
+export GITHUB_TOKEN="your_token"
+
+# Run with cargo
+cargo run --bin rsc -- create my-service --github-user myusername
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+cargo test
+
+# Run only CLI tests
+cargo test --bin rsc
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support
+
+For issues and feature requests, please use the GitHub issue tracker.
