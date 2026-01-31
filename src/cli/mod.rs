@@ -1,8 +1,3 @@
-//! CLI module for the Rust Service Creator (rsc) tool.
-//!
-//! This module provides functionality to create and scaffold new Rust microservices
-//! based on the rust-service-template repository.
-
 pub mod args;
 pub mod commands;
 pub mod generator;

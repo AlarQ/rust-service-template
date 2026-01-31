@@ -1,5 +1,3 @@
-//! File generation and modification logic.
-
 use anyhow::{Context, Result};
 use std::{
     fs,
@@ -7,17 +5,15 @@ use std::{
 };
 use walkdir::WalkDir;
 
-/// Files and directories to exclude from copying
 const EXCLUDED_PATHS: &[(&str, bool)] = &[
-    (".git", true),        // Directory
-    ("target", true),      // Directory
-    (".tmp", true),        // Directory
-    ("src/cli", true),     // Directory - CLI code itself
-    ("Cargo.lock", false), // File - will be regenerated
-    (".env", false),       // File - environment specific
+    (".git", true),
+    ("target", true),
+    (".tmp", true),
+    ("src/cli", true),
+    ("Cargo.lock", false),
+    (".env", false),
 ];
 
-/// Generate a new project by copying and modifying template files
 pub struct ProjectGenerator {
     source_dir: PathBuf,
     target_dir: PathBuf,
@@ -25,14 +21,6 @@ pub struct ProjectGenerator {
     project_name: String,
 }
 
-/// Validate a service name for use as a project name
-///
-/// # Arguments
-/// * `name` - The service name to validate
-///
-/// # Errors
-/// Returns an error if the name is empty, too long, starts with invalid characters,
-/// or contains invalid characters
 fn validate_service_name(name: &str) -> Result<()> {
     let invalid_chars = ['<', '>', ':', '"', '|', '?', '*', '\\', '/'];
 
@@ -52,10 +40,6 @@ fn validate_service_name(name: &str) -> Result<()> {
 }
 
 impl ProjectGenerator {
-    /// Create a new project generator
-    ///
-    /// # Errors
-    /// Returns an error if the project name is invalid
     pub fn new(
         source_dir: PathBuf,
         target_dir: PathBuf,
@@ -72,22 +56,13 @@ impl ProjectGenerator {
         })
     }
 
-    /// Generate the project
-    ///
-    /// # Errors
-    /// Returns an error if any file operation fails
     pub fn generate(&self) -> Result<()> {
-        // Create target directory
         fs::create_dir_all(&self.target_dir)
             .with_context(|| format!("Failed to create directory: {:?}", self.target_dir))?;
 
-        // Copy files
         self.copy_files()?;
-
-        // Always remove CLI module export since CLI code is excluded
         self.modify_lib_rs()?;
 
-        // Apply modifications if --without-kafka is set
         if self.without_kafka {
             self.remove_kafka_files()?;
             self.modify_cargo_toml()?;
@@ -102,19 +77,18 @@ impl ProjectGenerator {
             self.modify_github_workflows()?;
         }
 
-        // Update project name in Cargo.toml
         self.update_project_name()?;
+        self.update_main_rs_crate_name()?;
+        self.fix_api_mod_type_annotations()?;
 
         Ok(())
     }
 
-    /// Copy all files from source to target, excluding certain paths
     fn copy_files(&self) -> Result<()> {
         for entry in WalkDir::new(&self.source_dir) {
             let entry = entry.context("Failed to read directory entry")?;
             let source_path = entry.path();
 
-            // Skip excluded paths
             if self.is_excluded(source_path) {
                 continue;
             }
@@ -126,7 +100,6 @@ impl ProjectGenerator {
                 fs::create_dir_all(&target_path)
                     .with_context(|| format!("Failed to create directory: {:?}", target_path))?;
             } else {
-                // Ensure parent directory exists
                 if let Some(parent) = target_path.parent() {
                     fs::create_dir_all(parent)
                         .with_context(|| format!("Failed to create directory: {:?}", parent))?;
@@ -144,11 +117,9 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Check if a path should be excluded
     fn is_excluded(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy();
 
-        // Always exclude the target directory itself to prevent recursive copying
         let target_str = self.target_dir.to_string_lossy();
         if path_str.starts_with(target_str.as_ref()) {
             return true;
@@ -159,12 +130,10 @@ impl ProjectGenerator {
             let excluded_str = excluded_path.to_string_lossy();
 
             if *is_dir {
-                // For directories, check if the path is within the excluded directory
                 if path_str.starts_with(excluded_str.as_ref()) {
                     return true;
                 }
             } else if path_str == *excluded_str {
-                // For files, exact match
                 return true;
             }
         }
@@ -172,7 +141,6 @@ impl ProjectGenerator {
         false
     }
 
-    /// Remove Kafka-related files
     fn remove_kafka_files(&self) -> Result<()> {
         let files_to_remove = [
             "src/infrastructure/kafka_producer.rs",
@@ -191,13 +159,11 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify Cargo.toml to remove Kafka dependencies
     fn modify_cargo_toml(&self) -> Result<()> {
         let cargo_toml_path = self.target_dir.join("Cargo.toml");
         let content = fs::read_to_string(&cargo_toml_path)
             .with_context(|| format!("Failed to read {:?}", cargo_toml_path))?;
 
-        // Remove rdkafka dependency line
         let modified = content
             .lines()
             .filter(|line| !line.contains("rdkafka"))
@@ -210,7 +176,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify src/config.rs to remove Kafka configuration
     fn modify_config_rs(&self) -> Result<()> {
         let config_path = self.target_dir.join("src/config.rs");
         let content = fs::read_to_string(&config_path)
@@ -218,11 +183,14 @@ impl ProjectGenerator {
 
         let lines: Vec<&str> = content.lines().collect();
         let mut result_lines: Vec<String> = Vec::new();
-        let mut skip_until: Option<&str> = None;
+        let mut skip_mode = false;
+        let mut skip_level = 0i32;
+        let mut prev_line_was_kafka_config_field = false;
 
         for line in lines {
-            // Skip event_producer import
-            if line.contains("event_producer::EventProducer") {
+            // Handle the domain interfaces import line - remove event_producer but keep task_repository
+            if line.contains("use crate::domain::interfaces::{event_producer::EventProducer, task_repository::TaskRepository};") {
+                result_lines.push("use crate::domain::interfaces::task_repository::TaskRepository;".to_string());
                 continue;
             }
 
@@ -231,46 +199,57 @@ impl ProjectGenerator {
                 continue;
             }
 
-            // Skip kafka_config field and its serde attribute
-            // Note: We handle the serde attribute separately below
+            // Skip kafka_config field in AppConfig and track it for removing duplicate #[serde(default)]
             if line.contains("kafka_config: KafkaConfig") {
+                prev_line_was_kafka_config_field = true;
                 continue;
             }
 
-            // Skip #[serde(default)] that precedes kafka_config
-            if line.contains("#[serde(default)]")
-                && result_lines
-                    .last()
-                    .is_some_and(|prev: &String| prev.contains("kafka_config"))
-            {
+            // Skip the #[serde(default)] that precedes kafka_config
+            if line.contains("#[serde(default)]") && prev_line_was_kafka_config_field {
+                prev_line_was_kafka_config_field = false;
                 continue;
             }
 
-            // Start skipping KafkaConfig struct and its impl
-            if line.contains("pub struct KafkaConfig") {
-                skip_until = Some("impl Default for KafkaConfig");
+            // Reset the flag if we see a non-empty line that's not kafka_config field or its attribute
+            if !line.trim().is_empty() && !line.contains("#[serde(default)]") {
+                prev_line_was_kafka_config_field = false;
+            }
+
+            // Start skipping Kafka-related code when we see the doc comment
+            if line.contains("/// Kafka configuration for event streaming") {
+                skip_mode = true;
+                skip_level = 0;
                 continue;
             }
 
-            // Handle skipping blocks
-            if let Some(end_marker) = skip_until {
-                if line.contains(end_marker) {
-                    // Skip until the end of the impl block
-                    skip_until = Some("}");
+            if skip_mode {
+                // Count braces to track nesting level
+                for c in line.chars() {
+                    if c == '{' {
+                        skip_level += 1;
+                    } else if c == '}' {
+                        skip_level -= 1;
+                    }
+                }
+
+                // When we return to level 0 and see a closing brace, check if we're done
+                // The Kafka section has: struct (ends with }), 3 functions, impl block (ends with })
+                // We need to skip until we've seen all of these
+                if skip_level == 0 && line.trim() == "}" {
+                    // We've finished one block, but we need to check if there are more
+                    // The next non-empty line after the impl block's closing brace should be the CORS section
+                    // So we continue skipping until we see the CORS doc comment
                     continue;
                 }
-                if end_marker == "}" && line.trim() == "}" {
-                    skip_until = None;
+
+                // If we see the CORS section doc comment, we're done skipping
+                if line.contains("/// CORS (Cross-Origin Resource Sharing) configuration") {
+                    skip_mode = false;
+                    result_lines.push(line.to_string());
                     continue;
                 }
-                continue;
-            }
 
-            // Skip Kafka-related default functions
-            if line.contains("default_bootstrap_servers")
-                || line.contains("default_client_id")
-                || line.contains("default_task_topic")
-            {
                 continue;
             }
 
@@ -283,7 +262,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify src/main.rs to remove Kafka initialization
     fn modify_main_rs(&self) -> Result<()> {
         let main_path = self.target_dir.join("src/main.rs");
         let content = fs::read_to_string(&main_path)
@@ -293,18 +271,23 @@ impl ProjectGenerator {
         let mut skip_lines = false;
 
         for line in content.lines() {
-            // Skip Kafka-related imports
+            // Handle the infrastructure import line - remove kafka_producer but keep task::PostgresTaskRepository
+            if line.contains(
+                "infrastructure::{kafka_producer::KafkaEventService, task::PostgresTaskRepository}",
+            ) {
+                result_lines.push("    infrastructure::task::PostgresTaskRepository,");
+                continue;
+            }
+
             if line.contains("kafka_producer::KafkaEventService") {
                 continue;
             }
 
-            // Start skipping Kafka initialization block
             if line.contains("Initializing Kafka event producer") {
                 skip_lines = true;
                 continue;
             }
 
-            // End skipping after the Kafka initialization block
             if skip_lines && line.contains("let app_state = Arc::new(AppState") {
                 skip_lines = false;
             }
@@ -313,7 +296,6 @@ impl ProjectGenerator {
                 continue;
             }
 
-            // Skip event_producer field in AppState creation
             if line.contains("event_producer,") {
                 continue;
             }
@@ -327,7 +309,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify src/infrastructure/mod.rs to remove kafka_producer module
     fn modify_infrastructure_mod(&self) -> Result<()> {
         let mod_path = self.target_dir.join("src/infrastructure/mod.rs");
         let content = fs::read_to_string(&mod_path)
@@ -345,7 +326,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify src/domain/interfaces/mod.rs to remove event_producer module
     fn modify_domain_interfaces_mod(&self) -> Result<()> {
         let mod_path = self.target_dir.join("src/domain/interfaces/mod.rs");
         let content = fs::read_to_string(&mod_path)
@@ -363,7 +343,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify src/domain/task/models/mod.rs to remove events module
     fn modify_task_models_mod(&self) -> Result<()> {
         let mod_path = self.target_dir.join("src/domain/task/models/mod.rs");
         let content = fs::read_to_string(&mod_path)
@@ -381,11 +360,9 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify docker-compose.yaml to remove Kafka services
     fn modify_docker_compose(&self) -> Result<()> {
         let compose_path = self.target_dir.join("docker-compose.yaml");
 
-        // If the file doesn't exist, skip
         if !compose_path.exists() {
             return Ok(());
         }
@@ -393,8 +370,6 @@ impl ProjectGenerator {
         let content = fs::read_to_string(&compose_path)
             .with_context(|| format!("Failed to read {:?}", compose_path))?;
 
-        // Parse YAML and remove Kafka-related services
-        // For simplicity, we'll use string manipulation
         let mut result_lines = Vec::new();
         let mut in_kafka_service = false;
         let mut indent_level = 0;
@@ -402,14 +377,12 @@ impl ProjectGenerator {
         for line in content.lines() {
             let trimmed = line.trim();
 
-            // Detect start of Kafka-related services
             if trimmed == "zookeeper:" || trimmed == "kafka:" || trimmed == "kafka-ui:" {
                 in_kafka_service = true;
                 indent_level = line.len() - line.trim_start().len();
                 continue;
             }
 
-            // Check if we've exited the service block
             if in_kafka_service {
                 let current_indent = line.len() - line.trim_start().len();
                 if !line.trim().is_empty() && current_indent <= indent_level {
@@ -428,7 +401,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify .env.example to remove Kafka-related environment variables
     fn modify_env_example(&self) -> Result<()> {
         let env_path = self.target_dir.join(".env.example");
 
@@ -451,7 +423,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify run.sh to remove Kafka-related exports
     fn modify_run_sh(&self) -> Result<()> {
         let run_sh_path = self.target_dir.join("run.sh");
 
@@ -474,7 +445,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify .github/workflows/ci.yml to remove Kafka-related configuration
     fn modify_github_workflows(&self) -> Result<()> {
         let workflow_path = self.target_dir.join(".github/workflows/ci.yml");
 
@@ -492,22 +462,18 @@ impl ProjectGenerator {
         for line in content.lines() {
             let trimmed = line.trim();
 
-            // Skip lines containing KAFKA_BOOTSTRAP_SERVERS in the env section
             if trimmed.starts_with("KAFKA_BOOTSTRAP_SERVERS:") {
                 continue;
             }
 
-            // Detect start of kafka service block (lines 35-48 in original)
             if trimmed == "kafka:" {
                 in_kafka_service = true;
                 base_indent = line.len() - line.trim_start().len();
                 continue;
             }
 
-            // Check if we've exited the kafka service block
             if in_kafka_service {
                 let current_indent = line.len() - line.trim_start().len();
-                // If we hit a non-empty line at the same or lower indentation level, exit the block
                 if !line.trim().is_empty() && current_indent <= base_indent {
                     in_kafka_service = false;
                 } else {
@@ -524,7 +490,6 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Modify src/lib.rs to remove exports for deleted modules
     fn modify_lib_rs(&self) -> Result<()> {
         let lib_path = self.target_dir.join("src/lib.rs");
 
@@ -535,7 +500,6 @@ impl ProjectGenerator {
         let content = fs::read_to_string(&lib_path)
             .with_context(|| format!("Failed to read {:?}", lib_path))?;
 
-        // Remove the cli module export since CLI code is excluded
         let modified = content
             .lines()
             .filter(|line| !line.contains("pub mod cli"))
@@ -548,16 +512,28 @@ impl ProjectGenerator {
         Ok(())
     }
 
-    /// Update project name in Cargo.toml
     fn update_project_name(&self) -> Result<()> {
         let cargo_toml_path = self.target_dir.join("Cargo.toml");
         let content = fs::read_to_string(&cargo_toml_path)
             .with_context(|| format!("Failed to read {:?}", cargo_toml_path))?;
 
-        let modified = content.replacen(
+        // Replace package name
+        let mut modified = content.replacen(
             "name = \"rust-service-template\"",
             &format!("name = \"{}\"", self.project_name),
             1,
+        );
+
+        // Remove the rsc binary block
+        modified = modified.replace(
+            "[[bin]]\nname = \"rsc\"\npath = \"src/cli/main.rs\"\n\n",
+            "",
+        );
+
+        // Replace binary name
+        modified = modified.replace(
+            "name = \"rust-service-template\"",
+            &format!("name = \"{}\"", self.project_name),
         );
 
         fs::write(&cargo_toml_path, modified)
@@ -565,15 +541,58 @@ impl ProjectGenerator {
 
         Ok(())
     }
+
+    fn update_main_rs_crate_name(&self) -> Result<()> {
+        let main_rs_path = self.target_dir.join("src/main.rs");
+        let content = fs::read_to_string(&main_rs_path)
+            .with_context(|| format!("Failed to read {:?}", main_rs_path))?;
+
+        // Convert project name to valid Rust crate name (hyphens to underscores)
+        let crate_name = self.project_name.replace("-", "_");
+
+        let modified = content.replace("rust_service_template", &crate_name);
+
+        fs::write(&main_rs_path, modified)
+            .with_context(|| format!("Failed to write {:?}", main_rs_path))?;
+
+        Ok(())
+    }
+
+    fn fix_api_mod_type_annotations(&self) -> Result<()> {
+        let api_mod_path = self.target_dir.join("src/api/mod.rs");
+
+        if !api_mod_path.exists() {
+            return Ok(());
+        }
+
+        let content = fs::read_to_string(&api_mod_path)
+            .with_context(|| format!("Failed to read {:?}", api_mod_path))?;
+
+        // Fix type annotations in filter_map closures for CORS configuration
+        // Line 97: filter_map(|origin| origin.parse().ok())
+        let modified = content
+            .replace(
+                ".filter_map(|origin| origin.parse().ok())",
+                ".filter_map(|origin: &String| origin.parse().ok())",
+            )
+            // Line 109: filter_map(|method| method.parse().ok())
+            .replace(
+                ".filter_map(|method| method.parse().ok())",
+                ".filter_map(|method: &String| method.parse().ok())",
+            )
+            // Line 121: filter_map(|header| header.parse().ok())
+            .replace(
+                ".filter_map(|header| header.parse().ok())",
+                ".filter_map(|header: &String| header.parse().ok())",
+            );
+
+        fs::write(&api_mod_path, modified)
+            .with_context(|| format!("Failed to write {:?}", api_mod_path))?;
+
+        Ok(())
+    }
 }
 
-/// Initialize a git repository in the given directory
-///
-/// # Arguments
-/// * `dir` - Path to the directory where git should be initialized
-///
-/// # Errors
-/// Returns an error if git initialization fails
 pub fn init_git_repo(dir: &Path) -> Result<()> {
     let output = std::process::Command::new("git")
         .arg("init")
@@ -591,13 +610,6 @@ pub fn init_git_repo(dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Add all files to git staging area
-///
-/// # Arguments
-/// * `dir` - Path to the git repository
-///
-/// # Errors
-/// Returns an error if git add fails
 pub fn git_add_all(dir: &Path) -> Result<()> {
     let output = std::process::Command::new("git")
         .args(["add", "."])
@@ -615,18 +627,7 @@ pub fn git_add_all(dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Commit changes with the given message
-///
-/// # Arguments
-/// * `dir` - Path to the git repository
-/// * `message` - Commit message
-/// * `user_name` - Git user name for the commit
-/// * `user_email` - Git user email for the commit
-///
-/// # Errors
-/// Returns an error if git commit fails
 pub fn git_commit(dir: &Path, message: &str, user_name: &str, user_email: &str) -> Result<()> {
-    // Set git user config
     let output = std::process::Command::new("git")
         .args(["config", "user.name", user_name])
         .current_dir(dir)
@@ -653,7 +654,6 @@ pub fn git_commit(dir: &Path, message: &str, user_name: &str, user_email: &str) 
         );
     }
 
-    // Then commit
     let output = std::process::Command::new("git")
         .args(["commit", "-m", message])
         .current_dir(dir)
@@ -670,15 +670,6 @@ pub fn git_commit(dir: &Path, message: &str, user_name: &str, user_email: &str) 
     Ok(())
 }
 
-/// Add a remote to the git repository
-///
-/// # Arguments
-/// * `dir` - Path to the git repository
-/// * `name` - Name of the remote (e.g., "origin")
-/// * `url` - URL of the remote repository
-///
-/// # Errors
-/// Returns an error if git remote add fails
 pub fn git_add_remote(dir: &Path, name: &str, url: &str) -> Result<()> {
     let output = std::process::Command::new("git")
         .args(["remote", "add", name, url])
@@ -696,15 +687,6 @@ pub fn git_add_remote(dir: &Path, name: &str, url: &str) -> Result<()> {
     Ok(())
 }
 
-/// Push to remote repository
-///
-/// # Arguments
-/// * `dir` - Path to the git repository
-/// * `remote` - Name of the remote (e.g., "origin")
-/// * `branch` - Branch name to push
-///
-/// # Errors
-/// Returns an error if git push fails
 pub fn git_push(dir: &Path, remote: &str, branch: &str) -> Result<()> {
     let output = std::process::Command::new("git")
         .args(["push", "-u", remote, branch])

@@ -1,20 +1,13 @@
-//! GitHub API client for repository creation.
-//!
-//! This module provides functionality to interact with the GitHub API
-//! for creating repositories and managing repository settings.
-
 use anyhow::{Context, Result};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, USER_AGENT};
 use serde::{Deserialize, Serialize};
 
-/// GitHub API client for repository operations
 pub struct GitHubClient {
     client: reqwest::Client,
     token: String,
     api_base: String,
 }
 
-/// Request payload for creating a new repository
 #[derive(Serialize, Debug)]
 struct CreateRepoRequest {
     name: String,
@@ -24,7 +17,6 @@ struct CreateRepoRequest {
     auto_init: Option<bool>,
 }
 
-/// Response from GitHub API when creating a repository
 #[derive(Deserialize, Debug)]
 pub struct CreateRepoResponse {
     pub id: u64,
@@ -36,7 +28,6 @@ pub struct CreateRepoResponse {
     pub private: bool,
 }
 
-/// GitHub API error response
 #[derive(Deserialize, Debug)]
 #[allow(dead_code)]
 struct GitHubError {
@@ -46,13 +37,6 @@ struct GitHubError {
 }
 
 impl GitHubClient {
-    /// Create a new GitHub API client
-    ///
-    /// # Arguments
-    /// * `token` - GitHub personal access token
-    ///
-    /// # Errors
-    /// Returns an error if the HTTP client cannot be created
     pub fn new(token: impl Into<String>) -> Result<Self> {
         let token = token.into();
         if token.is_empty() {
@@ -75,16 +59,6 @@ impl GitHubClient {
         })
     }
 
-    /// Create a new repository on GitHub
-    ///
-    /// # Arguments
-    /// * `name` - Repository name
-    /// * `description` - Optional repository description
-    /// * `private` - Whether the repository should be private
-    /// * `owner` - GitHub username or organization name (used to determine user vs org repo)
-    ///
-    /// # Errors
-    /// Returns an error if the API request fails or the repository cannot be created
     pub async fn create_repository(
         &self,
         name: &str,
@@ -92,14 +66,11 @@ impl GitHubClient {
         private: bool,
         owner: &str,
     ) -> Result<CreateRepoResponse> {
-        // Determine if this is an org or user repository
         let url = if owner.contains('/') {
-            // Handle org/repo format
             let parts: Vec<&str> = owner.split('/').collect();
             let org = parts[0];
             format!("{}/orgs/{}/repos", self.api_base, org)
         } else {
-            // User repository
             format!("{}/user/repos", self.api_base)
         };
 
@@ -146,10 +117,6 @@ impl GitHubClient {
         }
     }
 
-    /// Get the authenticated user's information
-    ///
-    /// # Errors
-    /// Returns an error if the API request fails
     pub async fn get_authenticated_user(&self) -> Result<serde_json::Value> {
         let url = format!("{}/user", self.api_base);
 
@@ -183,10 +150,6 @@ impl GitHubClient {
     }
 }
 
-/// Get the GitHub token from the environment
-///
-/// # Errors
-/// Returns an error if the GITHUB_TOKEN environment variable is not set
 pub fn get_github_token() -> Result<String> {
     std::env::var("GITHUB_TOKEN").context(
         "GITHUB_TOKEN environment variable not set. Please set it to your GitHub personal access token."

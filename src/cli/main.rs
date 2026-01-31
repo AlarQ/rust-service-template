@@ -1,8 +1,3 @@
-//! Entry point for the rsc CLI tool
-//!
-//! This binary provides commands for creating and scaffolding Rust microservices
-//! based on the rust-service-template repository.
-
 use anyhow::Result;
 use clap::Parser;
 
