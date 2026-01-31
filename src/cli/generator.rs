@@ -99,6 +99,7 @@ impl ProjectGenerator {
             self.modify_docker_compose()?;
             self.modify_env_example()?;
             self.modify_run_sh()?;
+            self.modify_github_workflows()?;
         }
 
         // Update project name in Cargo.toml
@@ -469,6 +470,56 @@ impl ProjectGenerator {
 
         fs::write(&run_sh_path, modified)
             .with_context(|| format!("Failed to write {:?}", run_sh_path))?;
+
+        Ok(())
+    }
+
+    /// Modify .github/workflows/ci.yml to remove Kafka-related configuration
+    fn modify_github_workflows(&self) -> Result<()> {
+        let workflow_path = self.target_dir.join(".github/workflows/ci.yml");
+
+        if !workflow_path.exists() {
+            return Ok(());
+        }
+
+        let content = fs::read_to_string(&workflow_path)
+            .with_context(|| format!("Failed to read {:?}", workflow_path))?;
+
+        let mut result_lines = Vec::new();
+        let mut in_kafka_service = false;
+        let mut base_indent = 0;
+
+        for line in content.lines() {
+            let trimmed = line.trim();
+
+            // Skip lines containing KAFKA_BOOTSTRAP_SERVERS in the env section
+            if trimmed.starts_with("KAFKA_BOOTSTRAP_SERVERS:") {
+                continue;
+            }
+
+            // Detect start of kafka service block (lines 35-48 in original)
+            if trimmed == "kafka:" {
+                in_kafka_service = true;
+                base_indent = line.len() - line.trim_start().len();
+                continue;
+            }
+
+            // Check if we've exited the kafka service block
+            if in_kafka_service {
+                let current_indent = line.len() - line.trim_start().len();
+                // If we hit a non-empty line at the same or lower indentation level, exit the block
+                if !line.trim().is_empty() && current_indent <= base_indent {
+                    in_kafka_service = false;
+                } else {
+                    continue;
+                }
+            }
+
+            result_lines.push(line);
+        }
+
+        fs::write(&workflow_path, result_lines.join("\n"))
+            .with_context(|| format!("Failed to write {:?}", workflow_path))?;
 
         Ok(())
     }
