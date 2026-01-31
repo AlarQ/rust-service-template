@@ -657,7 +657,7 @@ impl ProjectGenerator {
             for entry in fs::read_dir(&tasks_dir)? {
                 let entry = entry?;
                 let path = entry.path();
-                if path.is_file() && path.extension().map_or(false, |ext| ext == "rs") {
+                if path.is_file() && path.extension().is_some_and(|ext| ext == "rs") {
                     let content = fs::read_to_string(&path)
                         .with_context(|| format!("Failed to read {:?}", path))?;
 

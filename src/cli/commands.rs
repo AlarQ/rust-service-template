@@ -89,10 +89,13 @@ pub async fn execute_create(args: CreateArgs) -> Result<()> {
         .args(["log", "--oneline", "-1"])
         .current_dir(temp_path)
         .output();
-    
+
     match output {
         Ok(output) if output.status.success() => {
-            println!("✓ Commit created: {}", String::from_utf8_lossy(&output.stdout).trim());
+            println!(
+                "✓ Commit created: {}",
+                String::from_utf8_lossy(&output.stdout).trim()
+            );
         }
         _ => {
             println!("⚠ Warning: Could not verify commit");
@@ -104,12 +107,12 @@ pub async fn execute_create(args: CreateArgs) -> Result<()> {
         .args(["branch", "--show-current"])
         .current_dir(temp_path)
         .output();
-    
+
     match output {
         Ok(output) if output.status.success() => {
             let branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
             println!("✓ Current branch: {}", branch);
-            
+
             println!("Pushing to GitHub...");
             generator::git_push(temp_path, "origin", &branch)
                 .context("Failed to push to remote. Make sure you have SSH access to GitHub.")?;
