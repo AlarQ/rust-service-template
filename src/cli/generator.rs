@@ -14,6 +14,8 @@ const EXCLUDED_PATHS: &[(&str, bool)] = &[
     (".env", false),
 ];
 
+const GIT_HOOKS_TO_COPY: &[&str] = &["pre-push"];
+
 pub struct ProjectGenerator {
     source_dir: PathBuf,
     target_dir: PathBuf,
@@ -61,6 +63,7 @@ impl ProjectGenerator {
             .with_context(|| format!("Failed to create directory: {:?}", self.target_dir))?;
 
         self.copy_files()?;
+        self.copy_git_hooks()?;
         self.modify_lib_rs()?;
 
         if self.without_kafka {
@@ -79,6 +82,7 @@ impl ProjectGenerator {
 
         self.update_project_name()?;
         self.update_main_rs_crate_name()?;
+        self.update_test_files_crate_name()?;
         self.fix_api_mod_type_annotations()?;
 
         Ok(())
@@ -130,8 +134,29 @@ impl ProjectGenerator {
             let excluded_str = excluded_path.to_string_lossy();
 
             if *is_dir {
-                if path_str.starts_with(excluded_str.as_ref()) {
+                // For directories, check if path is exactly the excluded directory
+                // or is a direct child of it (using path components)
+                if path_str == excluded_str.as_ref() {
                     return true;
+                }
+                // Check if path is inside the excluded directory
+                // Use path components to ensure we're matching full directory names
+                if let Ok(_relative) = path.strip_prefix(&excluded_path) {
+                    // If we can strip the prefix, the path is inside the excluded directory
+                    // But we need to make sure it's not a sibling directory that happens
+                    // to start with the same prefix (e.g., .github vs .git)
+                    let excluded_parent = excluded_path.parent();
+                    if let Some(parent) = excluded_parent {
+                        if let Ok(rel_to_parent) = path.strip_prefix(parent) {
+                            let first_component = rel_to_parent.components().next();
+                            if let Some(first) = first_component {
+                                let first_name = first.as_os_str().to_string_lossy();
+                                if first_name == *excluded {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
                 }
             } else if path_str == *excluded_str {
                 return true;
@@ -139,6 +164,42 @@ impl ProjectGenerator {
         }
 
         false
+    }
+
+    fn copy_git_hooks(&self) -> Result<()> {
+        let hooks_source_dir = self.source_dir.join(".git/hooks");
+        let hooks_target_dir = self.target_dir.join("scripts/git-hooks");
+
+        if !hooks_source_dir.exists() {
+            return Ok(());
+        }
+
+        fs::create_dir_all(&hooks_target_dir)
+            .with_context(|| format!("Failed to create hooks directory: {:?}", hooks_target_dir))?;
+
+        for hook_name in GIT_HOOKS_TO_COPY {
+            let source_path = hooks_source_dir.join(hook_name);
+            if source_path.exists() {
+                let target_path = hooks_target_dir.join(hook_name);
+                fs::copy(&source_path, &target_path).with_context(|| {
+                    format!(
+                        "Failed to copy hook: {:?} -> {:?}",
+                        source_path, target_path
+                    )
+                })?;
+
+                // Make the hook executable
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let mut permissions = fs::metadata(&target_path)?.permissions();
+                    permissions.set_mode(0o755);
+                    fs::set_permissions(&target_path, permissions)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     fn remove_kafka_files(&self) -> Result<()> {
@@ -558,6 +619,59 @@ impl ProjectGenerator {
         Ok(())
     }
 
+    fn update_test_files_crate_name(&self) -> Result<()> {
+        // Convert project name to valid Rust crate name (hyphens to underscores)
+        let crate_name = self.project_name.replace("-", "_");
+        // Convert to uppercase for environment variables (e.g., "ai_service" -> "AI_SERVICE")
+        let env_prefix = crate_name.to_uppercase();
+
+        // Update tests/common.rs
+        let common_rs_path = self.target_dir.join("tests/common.rs");
+        if common_rs_path.exists() {
+            let content = fs::read_to_string(&common_rs_path)
+                .with_context(|| format!("Failed to read {:?}", common_rs_path))?;
+
+            let modified = content
+                .replace("rust_service_template", &crate_name)
+                .replace("RUST_SERVICE_TEMPLATE__", &format!("{}__", env_prefix));
+
+            fs::write(&common_rs_path, modified)
+                .with_context(|| format!("Failed to write {:?}", common_rs_path))?;
+        }
+
+        // Update tests/integration/mod.rs
+        let integration_mod_path = self.target_dir.join("tests/integration/mod.rs");
+        if integration_mod_path.exists() {
+            let content = fs::read_to_string(&integration_mod_path)
+                .with_context(|| format!("Failed to read {:?}", integration_mod_path))?;
+
+            let modified = content.replace("rust_service_template", &crate_name);
+
+            fs::write(&integration_mod_path, modified)
+                .with_context(|| format!("Failed to write {:?}", integration_mod_path))?;
+        }
+
+        // Update all test files in tests/integration/tasks/
+        let tasks_dir = self.target_dir.join("tests/integration/tasks");
+        if tasks_dir.exists() {
+            for entry in fs::read_dir(&tasks_dir)? {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_file() && path.extension().map_or(false, |ext| ext == "rs") {
+                    let content = fs::read_to_string(&path)
+                        .with_context(|| format!("Failed to read {:?}", path))?;
+
+                    let modified = content.replace("rust_service_template", &crate_name);
+
+                    fs::write(&path, modified)
+                        .with_context(|| format!("Failed to write {:?}", path))?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     fn fix_api_mod_type_annotations(&self) -> Result<()> {
         let api_mod_path = self.target_dir.join("src/api/mod.rs");
 
@@ -595,7 +709,7 @@ impl ProjectGenerator {
 
 pub fn init_git_repo(dir: &Path) -> Result<()> {
     let output = std::process::Command::new("git")
-        .arg("init")
+        .args(["init", "-b", "main"])
         .current_dir(dir)
         .output()
         .context("Failed to execute git init")?;
@@ -605,6 +719,38 @@ pub fn init_git_repo(dir: &Path) -> Result<()> {
             "git init failed: {}",
             String::from_utf8_lossy(&output.stderr)
         );
+    }
+
+    // Set up git hooks from scripts/git-hooks directory
+    let hooks_source_dir = dir.join("scripts/git-hooks");
+    let hooks_target_dir = dir.join(".git/hooks");
+
+    if hooks_source_dir.exists() {
+        for entry in fs::read_dir(&hooks_source_dir)? {
+            let entry = entry?;
+            let source_path = entry.path();
+            if source_path.is_file() {
+                let file_name = source_path.file_name().unwrap();
+                let target_path = hooks_target_dir.join(file_name);
+
+                // Copy hook to .git/hooks
+                fs::copy(&source_path, &target_path).with_context(|| {
+                    format!(
+                        "Failed to copy hook: {:?} -> {:?}",
+                        source_path, target_path
+                    )
+                })?;
+
+                // Make the hook executable
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let mut permissions = fs::metadata(&target_path)?.permissions();
+                    permissions.set_mode(0o755);
+                    fs::set_permissions(&target_path, permissions)?;
+                }
+            }
+        }
     }
 
     Ok(())

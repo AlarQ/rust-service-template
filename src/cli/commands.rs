@@ -84,11 +84,43 @@ pub async fn execute_create(args: CreateArgs) -> Result<()> {
     )
     .context("Failed to commit changes")?;
 
-    println!("Pushing to GitHub...");
+    // Verify commit was created
+    let output = std::process::Command::new("git")
+        .args(["log", "--oneline", "-1"])
+        .current_dir(temp_path)
+        .output();
+    
+    match output {
+        Ok(output) if output.status.success() => {
+            println!("✓ Commit created: {}", String::from_utf8_lossy(&output.stdout).trim());
+        }
+        _ => {
+            println!("⚠ Warning: Could not verify commit");
+        }
+    }
 
-    generator::git_push(temp_path, "origin", "main")
-        .or_else(|_| generator::git_push(temp_path, "origin", "master"))
-        .context("Failed to push to remote. Make sure you have SSH access to GitHub.")?;
+    // Check current branch
+    let output = std::process::Command::new("git")
+        .args(["branch", "--show-current"])
+        .current_dir(temp_path)
+        .output();
+    
+    match output {
+        Ok(output) if output.status.success() => {
+            let branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            println!("✓ Current branch: {}", branch);
+            
+            println!("Pushing to GitHub...");
+            generator::git_push(temp_path, "origin", &branch)
+                .context("Failed to push to remote. Make sure you have SSH access to GitHub.")?;
+        }
+        _ => {
+            println!("Pushing to GitHub...");
+            generator::git_push(temp_path, "origin", "main")
+                .or_else(|_| generator::git_push(temp_path, "origin", "master"))
+                .context("Failed to push to remote. Make sure you have SSH access to GitHub.")?;
+        }
+    }
 
     println!("\n✅ Success! Repository created and pushed to GitHub.");
     println!("   Repository URL: {}", repo.html_url);
