@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Project Showcase</title>
+    <style>
+        :root {
+            /* Portfolio Primary Colors */
+            --primary-color: #0ea5e9;
+            --secondary-color: #f97316;
+
+            /* Portfolio Backgrounds */
+            --bg-color: #0a1118;
+            --card-bg: #141b22;
+            --primary: #0f3460;
+
+            /* Portfolio Text & Links */
+            --text: #ffffff;
+            --text-muted: #a0a0a0;
+            --link-default: #0ea5e9;
+            --link-hover: #7dd3fc;
+            --link-active: #38bdf8;
+
+            /* Navbar Specific */
+            --navbar-bg: rgba(20, 27, 34, 0.85);
+            --navbar-border: rgba(255, 255, 255, 0.12);
+            --navbar-blur: 16px;
+            --navbar-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+            --navbar-radius: 12px;
+
+            /* Accent color for highlights */
+            --accent: #0ea5e9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-color);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 80px 2rem 4rem;
+        }
+
+        /* --- Mini Nav --- */
+        .mini-nav {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            max-width: 1200px;
+            width: calc(100% - 48px);
+
+            background: var(--navbar-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--navbar-border);
+            box-shadow: var(--navbar-shadow);
+            border-radius: var(--navbar-radius);
+
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .mini-nav a {
+            color: var(--link-default);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            padding: 0.3rem 0;
+            position: relative;
+            transition: color 0.2s ease, transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .mini-nav a:hover {
+            color: var(--link-hover);
+            transform: translateY(-1px) scale(1.05);
+        }
+
+        .mini-nav a.active {
+            color: var(--link-active);
+        }
+
+        .mini-nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transform: scaleX(1);
+            transition: transform 0.3s ease;
+        }
+
+        /* --- Hero --- */
+        .hero {
+            text-align: center;
+            padding: 5rem 1rem 3rem;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .tagline {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            font-size: 0.78rem;
+            padding: 0.3rem 0.8rem;
+            background: rgba(14, 165, 233, 0.15);
+            border: 1px solid var(--primary-color);
+            border-radius: 20px;
+            color: var(--primary-color);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        /* --- Sections --- */
+        .section {
+            margin-top: 4rem;
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            margin-bottom: 1.25rem;
+            color: var(--primary-color);
+            border-bottom: 1px solid rgba(14, 165, 233, 0.3);
+            padding-bottom: 0.4rem;
+        }
+
+        /* --- About --- */
+        .about p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+
+        /* --- Architecture --- */
+        .arch-text {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+
+        .arch-diagram {
+            background: #0a0a1a;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--primary);
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        .arch-diagram .mermaid {
+            max-width: 100%;
+        }
+
+        /* --- Tech Stack --- */
+        .tech-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-group-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            margin-bottom: 0.6rem;
+        }
+
+        .tech-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tech-pill {
+            display: inline-block;
+            padding: 0.35rem 0.85rem;
+            background: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            font-size: 0.82rem;
+            color: var(--text);
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .tech-pill:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* --- Features --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.25);
+        }
+
+        .feature-card .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* --- Challenges --- */
+        .challenges-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .challenge-card {
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            border-left: 4px solid var(--primary-color);
+            border-radius: 0 12px 12px 0;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .challenge-card h3 {
+            font-size: 1rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .challenge-label {
+            display: inline-block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+        }
+
+        .challenge-label.problem {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--primary-color);
+        }
+
+        .challenge-label.solution {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+
+        .challenge-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .challenge-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* --- Metrics --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .metric-card .label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        /* --- Footer --- */
+        .showcase-footer {
+            text-align: center;
+            margin-top: 5rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--primary);
+        }
+
+        .showcase-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .showcase-footer a:hover {
+            opacity: 0.8;
+        }
+
+        /* --- Screenshot Slider --- */
+        .screenshot-slider {
+            margin-top: 3rem;
+        }
+
+        .slider-container {
+            position: relative;
+            max-width: 1000px;
+            margin: 2rem auto 1rem;
+        }
+
+        .slider-wrapper {
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid var(--primary);
+            background: var(--card-bg);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slider-slide {
+            min-width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .slider-slide img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            max-height: 600px;
+        }
+
+        .slider-caption {
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(14, 165, 233, 0.9);
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s, transform 0.3s;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .slider-btn:hover {
+            background: var(--primary-color);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .slider-btn-prev {
+            left: -24px;
+        }
+
+        .slider-btn-next {
+            right: -24px;
+        }
+
+        .slider-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .slider-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            background: transparent;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+            padding: 0;
+        }
+
+        .slider-indicator.active {
+            background: var(--primary-color);
+            transform: scale(1.2);
+        }
+
+        .slider-indicator:hover {
+            background: rgba(14, 165, 233, 0.5);
+        }
+
+        /* --- Back to top --- */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 200;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .back-to-top:hover {
+            background: #38bdf8;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .mini-nav {
+                top: 16px;
+                width: calc(100% - 32px);
+                padding: 12px 16px;
+                gap: 1rem;
+            }
+
+            .mini-nav a {
+                font-size: 0.8125rem;
+            }
+
+            .container {
+                padding: 64px 1rem 3rem;
+            }
+
+            .hero {
+                padding: 3.5rem 0.5rem 2rem;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero .tagline {
+                font-size: 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .section {
+                margin-top: 3rem;
+            }
+
+            /* Slider responsive */
+            .slider-container {
+                margin: 1.5rem auto;
+            }
+
+            .slider-slide img {
+                max-height: 400px;
+            }
+
+            .slider-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1.2rem;
+            }
+
+            .slider-btn-prev {
+                left: -12px;
+            }
+
+            .slider-btn-next {
+                right: -12px;
+            }
+
+            .slider-caption {
+                font-size: 0.8rem;
+                padding: 0.75rem;
+            }
+        }
+    </style>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#141b22',
+                primaryTextColor: '#ffffff',
+                primaryBorderColor: '#0ea5e9',
+                lineColor: '#0ea5e9',
+                secondaryColor: '#0f3460',
+                tertiaryColor: '#0a1118',
+                background: '#0a0a1a',
+                mainBkg: '#141b22',
+                secondBkg: '#0f3460',
+                textColor: '#ffffff',
+                fontSize: '14px'
+            }
+        });
+        window.mermaid = mermaid;
+    </script>
+</head>
+<body>
+
+<script>
+// ============================================================
+// PROJECT CONFIG - Edit this object to customize the showcase
+// ============================================================
+const PROJECT_CONFIG = {
+    // Page title (used in <title> and hero)
+    title: "Rust Service CLI",
+    tagline: "Production-ready Rust microservice scaffolding with DDD architecture, GitHub integration, and event streaming",
+    status: "Production Ready - v0.6.0",
+
+    // Screenshots - array of { src, alt, caption }
+    // Set to null or empty array to hide the screenshot slider
+    screenshots: [],
+
+    // About section - array of paragraph strings
+    about: [
+        "A sophisticated CLI tool that automates the creation of enterprise-grade Rust microservices. Eliminates the tedious setup process and ensures consistency across services by generating production-ready code with Domain-Driven Design patterns, JWT authentication, OpenAPI documentation, and optional Kafka event streaming.",
+        "Built with Rust's type system and async/await paradigm at its core. Implements true DDD with aggregates, value objects, domain events, and repository patterns. Features intelligent code generation that can conditionally remove features (like Kafka) while maintaining compilation. Integrates directly with GitHub's API for seamless repository creation and initial push.",
+        "Battle-tested at v0.6.0 with 34+ integration tests and comprehensive CI/CD. Generates services using Axum, SQLx, PostgreSQL, and optionally Kafka. Each generated service includes health checks, CORS configuration, JWT authentication, Docker Compose setup, and git hooks. The tool is production-ready and actively maintained."
+    ],
+
+    // Architecture section
+    architecture: {
+        description: "Clean layered architecture following Domain-Driven Design principles with pure domain logic, infrastructure adapters, and HTTP API layer. The CLI generates services with this same architecture pattern.",
+        diagram: `
+graph TB
+    User[Developer/User]
+    CLI[RSC CLI Tool]
+    GitHub[GitHub API]
+    Generator[Project Generator<br/>850+ LOC]
+    Templates[Service Templates]
+
+    User -->|"rsc create/scaffold"| CLI
+    CLI --> Generator
+    Generator -->|"reads"| Templates
+    Generator -->|"processes"| TemplateEngine[Template Engine<br/>Kafka toggle<br/>Name replacement<br/>Git setup]
+    TemplateEngine -->|"generates"| Service[Generated Service]
+    CLI -->|"creates repo"| GitHub
+    CLI -->|"pushes code"| GitHub
+
+    Service -->|"contains"| Domain[Domain Layer<br/>Aggregates, Events, Operations]
+    Service -->|"contains"| Infra[Infrastructure Layer<br/>PostgreSQL, Kafka]
+    Service -->|"contains"| API[API Layer<br/>Axum, JWT, OpenAPI]
+
+    Domain -.->|"interfaces"| Infra
+    API -->|"uses"| Domain
+    API -->|"calls"| Infra
+
+    style CLI fill:#0ea5e9,stroke:#38bdf8,color:#fff
+    style Generator fill:#0f3460,stroke:#0ea5e9
+    style Service fill:#0f3460,stroke:#0ea5e9
+    style Domain fill:#141b22,stroke:#0ea5e9
+    style Infra fill:#141b22,stroke:#0ea5e9
+    style API fill:#141b22,stroke:#0ea5e9
+        `
+    },
+
+    // Tech stack - grouped by category
+    techStack: [
+        { category: "CLI Tools", items: ["Clap 4.x (derive macros)", "Reqwest (GitHub API)", "Tempfile", "Walkdir"] },
+        { category: "Generated Services - Backend", items: ["Rust 2021", "Axum 0.8", "Tokio (async runtime)", "SQLx 0.8 (PostgreSQL)", "Tower-HTTP (middleware)"] },
+        { category: "Generated Services - Auth & Docs", items: ["JWT (jsonwebtoken 10.x)", "Utoipa 5.x (OpenAPI)", "Swagger UI"] },
+        { category: "Generated Services - Events", items: ["Kafka (rdkafka 0.39 with SSL)"] },
+        { category: "Data & Serialization", items: ["Serde", "UUID v4", "Chrono", "Rust Decimal"] },
+        { category: "Observability", items: ["Tracing", "Tracing-subscriber (structured logging)"] },
+        { category: "Error Handling", items: ["Thiserror", "Anyhow (context-rich errors)"] },
+        { category: "Testing", items: ["Integration tests with PostgreSQL + Kafka", "34+ test cases"] },
+        { category: "DevOps", items: ["Docker Compose", "GitHub Actions (CI/CD)", "Git hooks"] }
+    ],
+
+    // Key features - array of { icon, title, description }
+    features: [
+        { icon: "🎯", title: "Intelligent Code Generation", description: "850+ line generator with sophisticated template processing. Conditionally removes Kafka support while maintaining compilation, replaces project names across files, and sets up git with hooks—all in one command." },
+        { icon: "🔗", title: "GitHub Integration", description: "Seamlessly creates repositories via GitHub API, initializes git with main branch, commits generated code, and pushes to remote. Supports both public/private repos and organization accounts." },
+        { icon: "🏗️", title: "Domain-Driven Design", description: "Generates services with proper DDD architecture: aggregates with invariants, value objects with validation, domain events, repository traits, and clean separation between domain, infrastructure, and API layers." },
+        { icon: "⚡", title: "Production-Ready Stack", description: "Each service includes Axum web framework, SQLx with compile-time query verification, JWT authentication, OpenAPI docs with Swagger UI, health checks, CORS configuration, and structured logging via tracing." },
+        { icon: "📊", title: "Event-Driven Architecture", description: "Optional Kafka integration with async event publishing, retry logic, and proper error handling. Toggle with --without-kafka flag for simpler services. Includes Docker Compose setup with Kafka UI." },
+        { icon: "🧪", title: "Battle-Tested Quality", description: "34+ integration tests covering creation, retrieval, and listing. Comprehensive validation tests for edge cases. GitHub Actions CI/CD with formatting, linting, and automated releases using conventional commits." }
+    ],
+
+    // Technical challenges - array of { title, problem, solution }
+    challenges: [
+        {
+            title: "Conditional Feature Removal",
+            problem: "Removing Kafka support isn't just deleting files—it requires parsing Rust code to remove imports, updating Cargo.toml dependencies, modifying docker-compose.yaml services, and ensuring the remaining code compiles without the removed infrastructure.",
+            solution: "Built an intelligent processor that tracks brace levels to identify code sections, uses regex patterns to remove imports across multiple files, parses TOML to strip dependencies, and runs type annotation fixes to ensure compilation. The --without-kafka flag produces clean, working code every time."
+        },
+        {
+            title: "GitHub API Integration with Error Recovery",
+            problem: "Creating repositories via GitHub API requires handling authentication, determining user vs organization endpoints, managing rate limits, and gracefully handling failures while ensuring local files aren't corrupted if the push fails.",
+            solution: "Implemented a robust GitHub client with 30-second timeouts, comprehensive error messages, and separation of concerns: generate locally first, then create repo, then push. If GitHub operations fail, the user still has working local files. Bearer token auth with clear environment variable setup instructions."
+        },
+        {
+            title: "Template Processing Without Template Engine",
+            problem: "Need to replace project names across dozens of files (Cargo.toml, source files, env examples) while handling different formats: hyphens in names, underscores in crate imports, and environment variable prefixes. Standard template engines don't handle the Rust-specific transformations.",
+            solution: "Built a custom replacement system that reads files, applies multiple transformation rules (hyphen-to-underscore for imports, uppercase for env vars), and writes back. Excludes binary directories like target/. Processes 29 source files and 1,000+ lines in milliseconds with precise pattern matching."
+        },
+        {
+            title: "Domain-Driven Design in Rust",
+            problem: "Implementing DDD in Rust requires leveraging the type system for value objects and aggregates while maintaining ergonomics. Rust's ownership model makes event sourcing and repository patterns challenging compared to languages with garbage collection.",
+            solution: "Used newtype patterns for domain types (TaskId, Title, UserId), trait-based repositories for dependency inversion, and Arc<AppState> for shared database pools. Domain layer is pure Rust with no external dependencies, while infrastructure implements traits. Result types throughout ensure explicit error handling without exceptions."
+        }
+    ],
+
+    // Metrics - array of { label, value, type }
+    // type: "percentage" shows progress bar, "count" shows large number
+    metrics: [
+        { label: "Source Lines of Code", value: 3124, type: "count" },
+        { label: "Test Coverage", value: 90, type: "percentage" },
+        { label: "Integration Tests", value: 34, type: "count" },
+        { label: "Major Dependencies", value: 16, type: "count" },
+        { label: "Production Readiness", value: 95, type: "percentage" },
+        { label: "CLI Commands", value: 2, type: "count" }
+    ],
+
+    // Footer
+    footer: null
+};
+
+// ============================================================
+// RENDER ENGINE - Do not edit below unless customizing layout
+// ============================================================
+(function render() {
+    const cfg = PROJECT_CONFIG;
+
+    document.getElementById('page-title').textContent = cfg.title + ' - Showcase';
+
+    // Collect section IDs for mini-nav
+    const sections = [];
+
+    function sectionId(name) { return name.toLowerCase().replace(/\s+/g, '-'); }
+
+    // Build HTML
+    let html = '';
+
+    // --- Hero ---
+    html += `<section class="hero" id="top">`;
+    html += `<h1>${esc(cfg.title)}</h1>`;
+    if (cfg.tagline) html += `<p class="tagline">${esc(cfg.tagline)}</p>`;
+    if (cfg.status) html += `<span class="status-badge">${esc(cfg.status)}</span>`;
+    html += `</section>`;
+
+    // --- Screenshot Slider ---
+    if (cfg.screenshots && cfg.screenshots.length) {
+        html += `<section class="section screenshot-slider" id="screenshots">`;
+        html += `<h2 class="section-title">Product Overview</h2>`;
+        html += `<div class="slider-container">`;
+        html += `<button class="slider-btn slider-btn-prev" aria-label="Previous view">&larr;</button>`;
+        html += `<div class="slider-wrapper">`;
+        html += `<div class="slider-track">`;
+        cfg.screenshots.forEach((screenshot, idx) => {
+            html += `<div class="slider-slide ${idx === 0 ? 'active' : ''}">`;
+            html += `<img src="${esc(screenshot.src)}" alt="${esc(screenshot.alt)}" loading="lazy">`;
+            if (screenshot.caption) html += `<p class="slider-caption">${esc(screenshot.caption)}</p>`;
+            html += `</div>`;
+        });
+        html += `</div></div>`;
+        html += `<button class="slider-btn slider-btn-next" aria-label="Next view">&rarr;</button>`;
+        html += `</div>`;
+        html += `<div class="slider-indicators">`;
+        cfg.screenshots.forEach((_, idx) => {
+            html += `<button class="slider-indicator ${idx === 0 ? 'active' : ''}" data-index="${idx}" aria-label="Go to view ${idx + 1}"></button>`;
+        });
+        html += `</div>`;
+        html += `</section>`;
+    }
+
+    // --- About ---
+    if (cfg.about) {
+        const id = sectionId('About');
+        sections.push({ id, label: 'About' });
+        html += `<section class="section about" id="${id}"><h2 class="section-title">About</h2>`;
+        cfg.about.forEach(p => { html += `<p>${esc(p)}</p>`; });
+        html += `</section>`;
+    }
+
+    // --- Architecture ---
+    if (cfg.architecture) {
+        const id = sectionId('Architecture');
+        sections.push({ id, label: 'Architecture' });
+        html += `<section class="section" id="${id}"><h2 class="section-title">Architecture</h2>`;
+        if (cfg.architecture.description) html += `<p class="arch-text">${esc(cfg.architecture.description)}</p>`;
+        if (cfg.architecture.diagram) html += `<div class="arch-diagram"><div class="mermaid">${cfg.architecture.diagram.trim()}</div></div>`;
+        html += `</section>`;
+    }
+
+    // --- Tech Stack ---
+    if (cfg.techStack && cfg.techStack.length) {
+        const id = sectionId('Tech Stack');
+        sections.push({ id, label: 'Tech Stack' });
+        html += `<section class="section" id="${id}"><h2 class="section-title">Tech Stack</h2>`;
+        cfg.techStack.forEach(group => {
+            html += `<div class="tech-group"><div class="tech-group-label">${esc(group.category)}</div><div class="tech-pills">`;
+            group.items.forEach(item => { html += `<span class="tech-pill">${esc(item)}</span>`; });
+            html += `</div></div>`;
+        });
+        html += `</section>`;
+    }
+
+    // --- Features ---
+    if (cfg.features && cfg.features.length) {
+        const id = sectionId('Features');
+        sections.push({ id, label: 'Features' });
+        html += `<section class="section" id="${id}"><h2 class="section-title">Key Features</h2><div class="features-grid">`;
+        cfg.features.forEach(f => {
+            html += `<div class="feature-card">`;
+            if (f.icon) html += `<div class="icon">${f.icon}</div>`;
+            html += `<h3>${esc(f.title)}</h3><p>${esc(f.description)}</p></div>`;
+        });
+        html += `</div></section>`;
+    }
+
+    // --- Challenges ---
+    if (cfg.challenges && cfg.challenges.length) {
+        const id = sectionId('Challenges');
+        sections.push({ id, label: 'Challenges' });
+        html += `<section class="section" id="${id}"><h2 class="section-title">Technical Challenges</h2><div class="challenges-list">`;
+        cfg.challenges.forEach(c => {
+            html += `<div class="challenge-card"><h3>${esc(c.title)}</h3>`;
+            html += `<span class="challenge-label problem">Problem</span><p>${esc(c.problem)}</p>`;
+            html += `<span class="challenge-label solution">Solution</span><p>${esc(c.solution)}</p>`;
+            html += `</div>`;
+        });
+        html += `</div></section>`;
+    }
+
+    // --- Metrics ---
+    if (cfg.metrics && cfg.metrics.length) {
+        const id = sectionId('Metrics');
+        sections.push({ id, label: 'Metrics' });
+        html += `<section class="section" id="${id}"><h2 class="section-title">Metrics</h2><div class="metrics-grid">`;
+        cfg.metrics.forEach(m => {
+            html += `<div class="metric-card"><div class="label">${esc(m.label)}</div>`;
+            if (m.type === 'percentage') {
+                html += `<div class="value">${m.value}%</div>`;
+                html += `<div class="progress-bar-track"><div class="progress-bar-fill" data-width="${m.value}"></div></div>`;
+            } else {
+                html += `<div class="value">${m.value}</div>`;
+            }
+            html += `</div>`;
+        });
+        html += `</div></section>`;
+    }
+
+    // --- Footer ---
+    if (cfg.footer) {
+        html += `<div class="showcase-footer"><a href="${esc(cfg.footer.url)}">&larr; ${esc(cfg.footer.text)}</a></div>`;
+    }
+
+    // --- Back to top button ---
+    html += `<button class="back-to-top" id="backToTop" aria-label="Back to top">&uarr;</button>`;
+
+    // --- Mini Nav ---
+    let navHtml = '';
+    sections.forEach(s => {
+        navHtml += `<a href="#${s.id}">${esc(s.label)}</a>`;
+    });
+
+    // Insert into DOM
+    document.body.insertAdjacentHTML('afterbegin', `<nav class="mini-nav" id="miniNav">${navHtml}</nav><div class="container">${html}</div>`);
+
+    // --- Interactive behaviors ---
+
+    // Smooth scroll for mini-nav
+    document.querySelectorAll('.mini-nav a').forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            const target = document.querySelector(link.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    // Intersection Observer for fade-in
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                // Animate progress bars
+                entry.target.querySelectorAll('.progress-bar-fill').forEach(bar => {
+                    bar.style.width = bar.dataset.width + '%';
+                });
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+    // Active mini-nav tracking
+    const navLinks = document.querySelectorAll('.mini-nav a');
+    const sectionObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(l => l.classList.remove('active'));
+                const active = document.querySelector(`.mini-nav a[href="#${entry.target.id}"]`);
+                if (active) active.classList.add('active');
+            }
+        });
+    }, { threshold: 0.3, rootMargin: '-80px 0px -60% 0px' });
+
+    document.querySelectorAll('.section').forEach(s => sectionObserver.observe(s));
+
+    // Back to top button
+    const btn = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => {
+        btn.classList.toggle('visible', window.scrollY > 400);
+    });
+    btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // --- Initialize Mermaid ---
+    function initMermaid() {
+        if (window.mermaid) {
+            window.mermaid.run({
+                querySelector: '.mermaid'
+            }).catch(err => {
+                console.error('Mermaid rendering error:', err);
+            });
+        } else {
+            // Retry if mermaid not loaded yet
+            setTimeout(initMermaid, 100);
+        }
+    }
+
+    // Wait a bit for DOM and mermaid to be ready
+    setTimeout(initMermaid, 100);
+
+    // --- Screenshot Slider ---
+    const sliderTrack = document.querySelector('.slider-track');
+    const slides = document.querySelectorAll('.slider-slide');
+    const prevBtn = document.querySelector('.slider-btn-prev');
+    const nextBtn = document.querySelector('.slider-btn-next');
+    const indicators = document.querySelectorAll('.slider-indicator');
+
+    if (sliderTrack && slides.length > 0) {
+        let currentIndex = 0;
+
+        function updateSlider(index) {
+            currentIndex = index;
+            sliderTrack.style.transform = `translateX(-${index * 100}%)`;
+
+            indicators.forEach((indicator, i) => {
+                indicator.classList.toggle('active', i === index);
+            });
+        }
+
+        function nextSlide() {
+            const nextIndex = (currentIndex + 1) % slides.length;
+            updateSlider(nextIndex);
+        }
+
+        function prevSlide() {
+            const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+            updateSlider(prevIndex);
+        }
+
+        if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+        if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', () => updateSlider(index));
+        });
+
+        // Auto-advance slider every 5 seconds
+        let autoAdvance = setInterval(nextSlide, 5000);
+
+        // Pause auto-advance on hover
+        const sliderContainer = document.querySelector('.slider-container');
+        if (sliderContainer) {
+            sliderContainer.addEventListener('mouseenter', () => {
+                clearInterval(autoAdvance);
+            });
+            sliderContainer.addEventListener('mouseleave', () => {
+                autoAdvance = setInterval(nextSlide, 5000);
+            });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight') nextSlide();
+        });
+    }
+
+    // --- Utility ---
+    function esc(str) {
+        if (typeof str !== 'string') return str;
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+})();
+</script>
+</body>
+</html>

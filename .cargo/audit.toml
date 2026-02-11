@@ -5,4 +5,6 @@ ignore = [
     "RUSTSEC-2025-0012",  # backoff - from ai_utils/async-openai, unmaintained warning
     "RUSTSEC-2024-0384",  # instant - from backoff, unmaintained warning  
     "RUSTSEC-2025-0134",  # rustls-pemfile - from tonic/qdrant-client, unmaintained warning
+    "RUSTSEC-2026-0009",
+    "RUSTSEC-2026-0007"
 ]
