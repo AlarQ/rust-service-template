@@ -697,14 +697,7 @@ graph TD
         }
     ],
 
-    // Metrics - array of { label, value, type }
-    // type: "percentage" shows progress bar, "count" shows large number
-    metrics: [
-        { label: "Feature Complete", value: 85, type: "percentage" },
-        { label: "Test Coverage", value: 90, type: "percentage" },
-        { label: "Microservices", value: 4, type: "count" },
-        { label: "Production Readiness", value: 60, type: "percentage" }
-    ],
+ 
 
     // Footer
     footer: {
@@ -820,24 +813,7 @@ graph TD
         html += `</div></section>`;
     }
 
-    // --- Metrics ---
-    if (cfg.metrics && cfg.metrics.length) {
-        const id = sectionId('Metrics');
-        sections.push({ id, label: 'Metrics' });
-        html += `<section class="section" id="${id}"><h2 class="section-title">Metrics</h2><div class="metrics-grid">`;
-        cfg.metrics.forEach(m => {
-            html += `<div class="metric-card"><div class="label">${esc(m.label)}</div>`;
-            if (m.type === 'percentage') {
-                html += `<div class="value">${m.value}%</div>`;
-                html += `<div class="progress-bar-track"><div class="progress-bar-fill" data-width="${m.value}"></div></div>`;
-            } else {
-                html += `<div class="value">${m.value}</div>`;
-            }
-            html += `</div>`;
-        });
-        html += `</div></section>`;
-    }
-
+  
     // --- Footer ---
     if (cfg.footer) {
         html += `<div class="showcase-footer"><a href="${esc(cfg.footer.url)}">&larr; ${esc(cfg.footer.text)}</a></div>`;
