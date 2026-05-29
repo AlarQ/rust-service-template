@@ -8,14 +8,8 @@ use crate::cli::{
     github::{get_github_token, GitHubClient},
 };
 
-fn validate_output_path(path: &Path) -> Result<()> {
-    let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
-    let current = std::env::current_dir()?.canonicalize()?;
-
-    if !canonical.starts_with(&current) {
-        anyhow::bail!("Output path must be within the current directory");
-    }
-
+fn validate_output_path(_path: &Path) -> Result<()> {
+    // Allow any path - removed restriction to enable scaffolding to external directories
     Ok(())
 }
 
